@@ -1,0 +1,52 @@
+package com.example.work_program.modules.elder.controller;
+
+import com.example.work_program.annotation.LoginRequired;
+import com.example.work_program.common.Result;
+import com.example.work_program.modules.elder.entity.ElderHealthRecord;
+import com.example.work_program.modules.elder.service.ElderHealthRecordService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/elder")
+@LoginRequired
+public class ElderHealthRecordController {
+
+    @Autowired
+    private ElderHealthRecordService elderHealthRecordService;
+
+    @GetMapping("/list")
+    public Result<List<ElderHealthRecord>> list(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String riskLevel) {
+        return Result.success(elderHealthRecordService.findAll(name, riskLevel));
+    }
+
+    @GetMapping("/{id}")
+    public Result<ElderHealthRecord> getById(@PathVariable Long id) {
+        return Result.success(elderHealthRecordService.findById(id));
+    }
+
+    @PostMapping("/add")
+    @LoginRequired(roles = {"admin", "doctor", "nurse"})
+    public Result<Void> add(@RequestBody ElderHealthRecord record) {
+        elderHealthRecordService.add(record);
+        return Result.success("添加成功", null);
+    }
+
+    @PutMapping("/update")
+    @LoginRequired(roles = {"admin", "doctor", "nurse"})
+    public Result<Void> update(@RequestBody ElderHealthRecord record) {
+        elderHealthRecordService.update(record);
+        return Result.success("更新成功", null);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    @LoginRequired(roles = {"admin", "doctor"})
+    public Result<Void> delete(@PathVariable Long id) {
+        elderHealthRecordService.deleteById(id);
+        return Result.success("删除成功", null);
+    }
+}
