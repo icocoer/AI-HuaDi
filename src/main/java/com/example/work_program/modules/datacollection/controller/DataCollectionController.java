@@ -1,6 +1,8 @@
 package com.example.work_program.modules.datacollection.controller;
 
 import com.example.work_program.annotation.LoginRequired;
+import com.example.work_program.annotation.LogOperation;
+import com.example.work_program.common.PageResult;
 import com.example.work_program.common.Result;
 import com.example.work_program.modules.datacollection.dto.DataCollectionStatisticsDTO;
 import com.example.work_program.modules.elder.entity.ElderHealthRecord;
@@ -10,10 +12,10 @@ import com.example.work_program.modules.datacollection.enums.DataTypeEnum;
 import com.example.work_program.modules.elder.service.ElderHealthRecordService;
 import com.example.work_program.modules.datacollection.service.HealthDataCollectionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 数据影像采集系统 - 主控制器
@@ -36,17 +38,12 @@ public class DataCollectionController {
      * 分页查询数据采集记录
      */
     @GetMapping("/list")
-    public Result<List<HealthDataCollection>> list(
+    public Result<PageResult<HealthDataCollection>> list(
             @RequestParam(required = false) Long elderId,
             @RequestParam(required = false) String dataSource,
-            @RequestParam(required = false) String dataType) {
-        List<HealthDataCollection> list = healthDataCollectionService.findAll(elderId, dataSource);
-        if (dataType != null && !dataType.isEmpty()) {
-            list = list.stream()
-                    .filter(item -> dataType.equals(item.getDataType()))
-                    .collect(Collectors.toList());
-        }
-        return Result.success(list);
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return Result.success(healthDataCollectionService.findAll(elderId, dataSource, pageNum, pageSize));
     }
 
     /**
@@ -61,7 +58,8 @@ public class DataCollectionController {
      * 添加数据采集记录
      */
     @PostMapping("/add")
-    public Result<Void> add(@RequestBody HealthDataCollection data) {
+    @LogOperation("添加采集记录")
+    public Result<Void> add(@Valid @RequestBody HealthDataCollection data) {
         healthDataCollectionService.add(data);
         return Result.success("数据采集记录添加成功", null);
     }
@@ -70,7 +68,8 @@ public class DataCollectionController {
      * 更新数据采集记录
      */
     @PutMapping("/update")
-    public Result<Void> update(@RequestBody HealthDataCollection data) {
+    @LogOperation("更新采集记录")
+    public Result<Void> update(@Valid @RequestBody HealthDataCollection data) {
         healthDataCollectionService.update(data);
         return Result.success("更新成功", null);
     }
@@ -80,6 +79,7 @@ public class DataCollectionController {
      */
     @DeleteMapping("/delete/{id}")
     @LoginRequired(roles = {"admin", "doctor"})
+    @LogOperation("删除采集记录")
     public Result<Void> delete(@PathVariable Long id) {
         healthDataCollectionService.deleteById(id);
         return Result.success("删除成功", null);
@@ -93,7 +93,7 @@ public class DataCollectionController {
     @GetMapping("/statistics")
     public Result<DataCollectionStatisticsDTO> getStatistics(@RequestParam(required = false) Long elderId) {
         DataCollectionStatisticsDTO stats = new DataCollectionStatisticsDTO();
-        List<HealthDataCollection> allData = healthDataCollectionService.findAll(elderId, null);
+        List<HealthDataCollection> allData = healthDataCollectionService.findAll(elderId, null, 1, 10000).getList();
 
         stats.setTotalCount((long) allData.size());
         stats.setSmartCount(allData.stream().filter(d -> "smart".equals(d.getDataSource())).count());

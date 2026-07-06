@@ -1,11 +1,13 @@
 package com.example.work_program.modules.intervention.service.impl;
 
+import com.example.work_program.common.PageResult;
 import com.example.work_program.modules.intervention.entity.InterventionPlan;
 import com.example.work_program.modules.intervention.mapper.InterventionPlanMapper;
 import com.example.work_program.modules.intervention.service.InterventionPlanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -15,8 +17,14 @@ public class InterventionPlanServiceImpl implements InterventionPlanService {
     private InterventionPlanMapper interventionPlanMapper;
 
     @Override
-    public List<InterventionPlan> findAll(Long elderId, String status) {
-        return interventionPlanMapper.findAll(elderId, status);
+    public PageResult<InterventionPlan> findAll(Long elderId, String status, int pageNum, int pageSize) {
+        int offset = (pageNum - 1) * pageSize;
+        Long total = interventionPlanMapper.count(elderId, status);
+        if (total == 0) {
+            return new PageResult<>(Collections.emptyList(), 0L, pageNum, pageSize);
+        }
+        List<InterventionPlan> list = interventionPlanMapper.findAll(elderId, status, offset, pageSize);
+        return new PageResult<>(list, total, pageNum, pageSize);
     }
 
     @Override

@@ -19,8 +19,14 @@ public interface UserMapper {
     @Select("<script>SELECT * FROM sys_user <where>" +
             "<if test='username != null and username != \"\"'>AND username LIKE CONCAT('%', #{username}, '%')</if>" +
             "<if test='realName != null and realName != \"\"'>AND real_name LIKE CONCAT('%', #{realName}, '%')</if>" +
-            "</where> ORDER BY create_time DESC</script>")
-    List<User> findAll(@Param("username") String username, @Param("realName") String realName);
+            "</where> ORDER BY create_time DESC LIMIT #{offset}, #{limit}</script>")
+    List<User> findAll(@Param("username") String username, @Param("realName") String realName, @Param("offset") int offset, @Param("limit") int limit);
+
+    @Select("<script>SELECT COUNT(*) FROM sys_user <where>" +
+            "<if test='username != null and username != \"\"'>AND username LIKE CONCAT('%', #{username}, '%')</if>" +
+            "<if test='realName != null and realName != \"\"'>AND real_name LIKE CONCAT('%', #{realName}, '%')</if>" +
+            "</where></script>")
+    Long count(@Param("username") String username, @Param("realName") String realName);
 
     @Insert("INSERT INTO sys_user (id, username, password, real_name, phone, email, status, role, create_time, update_time) " +
             "VALUES (#{id}, #{username}, #{password}, #{realName}, #{phone}, #{email}, #{status}, #{role}, NOW(), NOW())")

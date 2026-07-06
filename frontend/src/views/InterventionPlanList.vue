@@ -120,6 +120,7 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { interventionPlanApi } from '../api'
+import { exportToExcel } from '../utils/export'
 
 const tableData = ref([])
 const loading = ref(false)
@@ -130,6 +131,9 @@ const editId = ref(null)
 const formRef = ref(null)
 const searchElderId = ref('')
 const searchStatus = ref('')
+const pageNum = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 
 const form = ref({
   elderId: '', planName: '', planType: 'cognitive', riskLevel: 'low',
@@ -153,12 +157,29 @@ const parseNumber = (val) => {
 const loadData = async () => {
   loading.value = true
   try {
-    const params = { status: searchStatus.value || undefined }
+    const params = { status: searchStatus.value || undefined, pageNum: pageNum.value, pageSize: pageSize.value }
     const eId = parseNumber(searchElderId.value)
     if (eId) params.elderId = eId
     const res = await interventionPlanApi.list(params)
-    tableData.value = res.data || []
-  } catch { tableData.value = [] } finally { loading.value = false }
+    tableData.value = res.data.list || []
+    total.value = res.data.total || 0
+  } catch { tableData.value = []; total.value = 0 } finally { loading.value = false }
+}
+
+const handleSearch = () => { pageNum.value = 1; loadData() }
+
+const handleExport = () => {
+  exportToExcel(tableData.value, [
+    { prop: 'id', label: 'ID' },
+    { prop: 'elderId', label: '老人ID' },
+    { prop: 'planName', label: '计划名称' },
+    { prop: 'planType', label: '计划类型' },
+    { prop: 'riskLevel', label: '风险等级' },
+    { prop: 'startDate', label: '开始日期' },
+    { prop: 'endDate', label: '结束日期' },
+    { prop: 'responsibleDoctor', label: '责任医生' },
+    { prop: 'status', label: '状态' }
+  ], '干预计划列表')
 }
 
 const openAdd = () => { isEdit.value = false; editId.value = null; dialogVisible.value = true }

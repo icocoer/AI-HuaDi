@@ -1,11 +1,13 @@
 package com.example.work_program.modules.risk.service.impl;
 
+import com.example.work_program.common.PageResult;
 import com.example.work_program.modules.risk.entity.CognitiveAssessment;
 import com.example.work_program.modules.risk.mapper.CognitiveAssessmentMapper;
 import com.example.work_program.modules.risk.service.CognitiveAssessmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -15,8 +17,14 @@ public class CognitiveAssessmentServiceImpl implements CognitiveAssessmentServic
     private CognitiveAssessmentMapper cognitiveAssessmentMapper;
 
     @Override
-    public List<CognitiveAssessment> findAll(Long elderId, String riskLevel) {
-        return cognitiveAssessmentMapper.findAll(elderId, riskLevel);
+    public PageResult<CognitiveAssessment> findAll(Long elderId, String riskLevel, int pageNum, int pageSize) {
+        int offset = (pageNum - 1) * pageSize;
+        Long total = cognitiveAssessmentMapper.count(elderId, riskLevel);
+        if (total == 0) {
+            return new PageResult<>(Collections.emptyList(), 0L, pageNum, pageSize);
+        }
+        List<CognitiveAssessment> list = cognitiveAssessmentMapper.findAll(elderId, riskLevel, offset, pageSize);
+        return new PageResult<>(list, total, pageNum, pageSize);
     }
 
     @Override

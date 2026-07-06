@@ -38,23 +38,23 @@ public class AnalysisServiceImpl implements AnalysisService {
     public AnalysisStatisticsDTO getDashboardStatistics() {
         AnalysisStatisticsDTO dto = new AnalysisStatisticsDTO();
 
-        dto.setTotalUsers((long) userMapper.findAll(null, null).size());
-        dto.setTotalElders((long) elderHealthRecordMapper.findAll(null, null).size());
-        dto.setTotalAssessments((long) cognitiveAssessmentMapper.findAll(null, null).size());
-        dto.setTotalPlans((long) interventionPlanMapper.findAll(null, null).size());
-        dto.setTotalExecutions((long) interventionExecutionMapper.findAll(null, null).size());
-        dto.setTotalDataCollections((long) healthDataCollectionMapper.findAll(null, null).size());
+        dto.setTotalUsers(userMapper.count(null, null));
+        dto.setTotalElders(elderHealthRecordMapper.count(null, null));
+        dto.setTotalAssessments(cognitiveAssessmentMapper.count(null, null));
+        dto.setTotalPlans(interventionPlanMapper.count(null, null));
+        dto.setTotalExecutions(interventionExecutionMapper.count(null, null));
+        dto.setTotalDataCollections(healthDataCollectionMapper.count(null, null));
 
         Map<String, Long> riskDist = new HashMap<>();
-        riskDist.put("low", elderHealthRecordMapper.findAll(null, "low").stream().count());
-        riskDist.put("medium", elderHealthRecordMapper.findAll(null, "medium").stream().count());
-        riskDist.put("high", elderHealthRecordMapper.findAll(null, "high").stream().count());
+        riskDist.put("low", elderHealthRecordMapper.count(null, "low"));
+        riskDist.put("medium", elderHealthRecordMapper.count(null, "medium"));
+        riskDist.put("high", elderHealthRecordMapper.count(null, "high"));
         dto.setRiskDistribution(riskDist);
 
         Map<String, Long> planStatus = new HashMap<>();
-        planStatus.put("pending", interventionPlanMapper.findAll(null, "pending").stream().count());
-        planStatus.put("in_progress", interventionPlanMapper.findAll(null, "in_progress").stream().count());
-        planStatus.put("completed", interventionPlanMapper.findAll(null, "completed").stream().count());
+        planStatus.put("pending", interventionPlanMapper.count(null, "pending"));
+        planStatus.put("in_progress", interventionPlanMapper.count(null, "in_progress"));
+        planStatus.put("completed", interventionPlanMapper.count(null, "completed"));
         dto.setPlanStatusDistribution(planStatus);
 
         long totalPlans = dto.getTotalPlans();
@@ -70,9 +70,9 @@ public class AnalysisServiceImpl implements AnalysisService {
     public RiskDistributionDTO getRiskDistribution() {
         RiskDistributionDTO dto = new RiskDistributionDTO();
         Map<String, Long> counts = new HashMap<>();
-        counts.put("low", elderHealthRecordMapper.findAll(null, "low").stream().count());
-        counts.put("medium", elderHealthRecordMapper.findAll(null, "medium").stream().count());
-        counts.put("high", elderHealthRecordMapper.findAll(null, "high").stream().count());
+        counts.put("low", elderHealthRecordMapper.count(null, "low"));
+        counts.put("medium", elderHealthRecordMapper.count(null, "medium"));
+        counts.put("high", elderHealthRecordMapper.count(null, "high"));
         dto.setRiskLevelCounts(counts);
         return dto;
     }

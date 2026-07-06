@@ -1,10 +1,12 @@
 package com.example.work_program.modules.datacollection.controller;
 
 import com.example.work_program.annotation.LoginRequired;
+import com.example.work_program.annotation.LogOperation;
 import com.example.work_program.common.Result;
 import com.example.work_program.modules.datacollection.entity.HealthQuestionnaire;
 import com.example.work_program.modules.datacollection.service.HealthQuestionnaireService;
 import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -51,7 +53,8 @@ public class HealthQuestionnaireController {
      */
     @PostMapping("/add")
     @LoginRequired(roles = {"admin", "doctor", "nurse"})
-    public Result<Void> add(@RequestBody HealthQuestionnaire questionnaire) {
+    @LogOperation("添加问询记录")
+    public Result<Void> add(@Valid @RequestBody HealthQuestionnaire questionnaire) {
         healthQuestionnaireService.add(questionnaire);
         return Result.success("健康问询记录添加成功", null);
     }
@@ -61,7 +64,8 @@ public class HealthQuestionnaireController {
      */
     @PutMapping("/update")
     @LoginRequired(roles = {"admin", "doctor", "nurse"})
-    public Result<Void> update(@RequestBody HealthQuestionnaire questionnaire) {
+    @LogOperation("更新问询记录")
+    public Result<Void> update(@Valid @RequestBody HealthQuestionnaire questionnaire) {
         healthQuestionnaireService.update(questionnaire);
         return Result.success("更新成功", null);
     }
@@ -71,6 +75,7 @@ public class HealthQuestionnaireController {
      */
     @DeleteMapping("/delete/{id}")
     @LoginRequired(roles = {"admin", "doctor"})
+    @LogOperation("删除问询记录")
     public Result<Void> delete(@PathVariable Long id) {
         healthQuestionnaireService.deleteById(id);
         return Result.success("删除成功", null);

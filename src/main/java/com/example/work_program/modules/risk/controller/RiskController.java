@@ -1,6 +1,7 @@
 package com.example.work_program.modules.risk.controller;
 
 import com.example.work_program.annotation.LoginRequired;
+import com.example.work_program.common.PageResult;
 import com.example.work_program.common.Result;
 import com.example.work_program.modules.risk.entity.CognitiveAssessment;
 import com.example.work_program.modules.risk.entity.RiskWarning;
@@ -25,15 +26,18 @@ public class RiskController {
     private RiskWarningService riskWarningService;
 
     @GetMapping("/assessment/list")
-    public Result<List<CognitiveAssessment>> assessmentList(
+    public Result<PageResult<CognitiveAssessment>> assessmentList(
             @RequestParam(required = false) Long elderId,
-            @RequestParam(required = false) String riskLevel) {
-        return Result.success(cognitiveAssessmentService.findAll(elderId, riskLevel));
+            @RequestParam(required = false) String riskLevel,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return Result.success(cognitiveAssessmentService.findAll(elderId, riskLevel, pageNum, pageSize));
     }
 
     @GetMapping("/assess/{elderId}")
     public Result<Map<String, Object>> assessRisk(@PathVariable Long elderId) {
-        List<CognitiveAssessment> assessments = cognitiveAssessmentService.findAll(elderId, null);
+        var assessmentPage = cognitiveAssessmentService.findAll(elderId, null, 1, 10000);
+        List<CognitiveAssessment> assessments = assessmentPage.getList();
         CognitiveAssessment latest = cognitiveAssessmentService.findLatestByElderId(elderId);
 
         Map<String, Object> result = new HashMap<>();
@@ -95,7 +99,8 @@ public class RiskController {
     @GetMapping("/statistics")
     public Result<Map<String, Object>> getRiskStatistics() {
         Map<String, Object> stats = new HashMap<>();
-        List<CognitiveAssessment> all = cognitiveAssessmentService.findAll(null, null);
+        var assessmentPage = cognitiveAssessmentService.findAll(null, null, 1, 10000);
+        List<CognitiveAssessment> all = assessmentPage.getList();
         stats.put("totalAssessments", all.size());
         stats.put("lowCount", all.stream().filter(a -> "low".equals(a.getRiskLevel())).count());
         stats.put("mediumCount", all.stream().filter(a -> "medium".equals(a.getRiskLevel())).count());

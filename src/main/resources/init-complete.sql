@@ -210,16 +210,16 @@ CREATE TABLE IF NOT EXISTS sys_dict (
 -- 初始化数据
 -- ============================================================
 
--- 管理员账号 (admin/admin123)
+-- 管理员账号 (admin/admin123，SHA-256加密)
 INSERT IGNORE INTO sys_user (id, username, password, real_name, phone, email, status, role, create_time, update_time)
-VALUES (1, 'admin', 'admin123', '系统管理员', '13800000000', 'admin@example.com', 1, 'admin', NOW(), NOW());
+VALUES (1, 'admin', 'fb59cc6625a35fe603dec180b9a54f161ffea9afb7f8d05eaef860833ba2506b', '系统管理员', '13800000000', 'admin@example.com', 1, 'admin', NOW(), NOW());
 
--- 测试医生账号
+-- 测试医生账号 (doctor1/123456，SHA-256加密)
 INSERT IGNORE INTO sys_user (id, username, password, real_name, phone, email, status, role, create_time, update_time)
-VALUES (2, 'doctor1', '123456', '张医生', '13800000001', 'doctor1@example.com', 1, 'doctor', NOW(), NOW());
+VALUES (2, 'doctor1', 'f9dc5cf60e578df78e91835f4f662e802ef3bc34fb5cd23ddbbc8d37807d5d32', '张医生', '13800000001', 'doctor1@example.com', 1, 'doctor', NOW(), NOW());
 
 INSERT IGNORE INTO sys_user (id, username, password, real_name, phone, email, status, role, create_time, update_time)
-VALUES (3, 'nurse1', '123456', '李护士', '13800000002', 'nurse1@example.com', 1, 'nurse', NOW(), NOW());
+VALUES (3, 'nurse1', 'f9dc5cf60e578df78e91835f4f662e802ef3bc34fb5cd23ddbbc8d37807d5d32', '李护士', '13800000002', 'nurse1@example.com', 1, 'nurse', NOW(), NOW());
 
 -- 系统字典初始数据
 INSERT IGNORE INTO sys_dict (id, dict_type, dict_key, dict_value, sort) VALUES

@@ -85,6 +85,7 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { userApi } from '../api'
+import { exportToExcel } from '../utils/export'
 
 const tableData = ref([])
 const loading = ref(false)
@@ -95,6 +96,9 @@ const editId = ref(null)
 const formRef = ref(null)
 const searchUsername = ref('')
 const searchRealName = ref('')
+const pageNum = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 
 const user = computed(() => {
   try { return JSON.parse(localStorage.getItem('user') || '{}') } catch { return {} }
@@ -117,9 +121,24 @@ const dialogTitle = computed(() => isEdit.value ? '编辑用户' : '添加用户
 const loadData = async () => {
   loading.value = true
   try {
-    const res = await userApi.list({ username: searchUsername.value, realName: searchRealName.value })
-    tableData.value = res.data || []
-  } catch { tableData.value = [] } finally { loading.value = false }
+    const res = await userApi.list({ username: searchUsername.value, realName: searchRealName.value, pageNum: pageNum.value, pageSize: pageSize.value })
+    tableData.value = res.data.list || []
+    total.value = res.data.total || 0
+  } catch { tableData.value = []; total.value = 0 } finally { loading.value = false }
+}
+
+const handleSearch = () => { pageNum.value = 1; loadData() }
+
+const handleExport = () => {
+  exportToExcel(tableData.value, [
+    { prop: 'id', label: 'ID' },
+    { prop: 'username', label: '用户名' },
+    { prop: 'realName', label: '真实姓名' },
+    { prop: 'phone', label: '手机号' },
+    { prop: 'email', label: '邮箱' },
+    { prop: 'role', label: '角色' },
+    { prop: 'status', label: '状态' }
+  ], '用户列表')
 }
 
 const openAdd = () => {

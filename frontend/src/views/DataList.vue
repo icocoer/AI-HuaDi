@@ -42,6 +42,7 @@
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
           <el-button @click="handleReset">重置</el-button>
+          <el-button type="success" @click="handleExport">导出</el-button>
         </el-form-item>
       </el-form>
 
@@ -158,6 +159,7 @@ import { useRoute } from 'vue-router'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { dataCollectionApi, smartAssessmentApi, healthQuestionnaireApi, imageReportApi } from '../api'
+import { exportToExcel } from '../utils/export'
 import AddEditModal from '../components/AddEditModal.vue'
 import DetailModal from '../components/DetailModal.vue'
 
@@ -240,7 +242,7 @@ const loadData = async () => {
   loading.value = true
   try {
     let res
-    const params = buildParams()
+    const params = { ...buildParams(), pageNum: pageNum.value, pageSize: pageSize.value }
     switch (activeTab.value) {
       case 'smart':
         res = await smartAssessmentApi.list(params)
@@ -254,14 +256,9 @@ const loadData = async () => {
       default:
         res = await dataCollectionApi.list(params)
     }
-    const data = res.data || []
-    if (Array.isArray(data)) {
-      total.value = data.length
-      const start = (pageNum.value - 1) * pageSize.value
-      tableData.value = data.slice(start, start + pageSize.value)
-    }
+    tableData.value = res.data.list || []
+    total.value = res.data.total || 0
   } catch {
-    // 加载模拟数据
     loadMockData()
   } finally {
     loading.value = false
@@ -298,6 +295,44 @@ const loadMockData = () => {
 const handleSearch = () => {
   pageNum.value = 1
   loadData()
+}
+
+const handleExport = () => {
+  const columnsMap = {
+    all: [
+      { prop: 'elderName', label: '老人姓名' },
+      { prop: 'dataSourceDesc', label: '数据来源' },
+      { prop: 'dataTypeDesc', label: '数据类型' },
+      { prop: 'collectionDate', label: '采集日期' },
+      { prop: 'collector', label: '采集人' },
+      { prop: 'createTime', label: '创建时间' }
+    ],
+    smart: [
+      { prop: 'elderId', label: '老人ID' },
+      { prop: 'assessmentType', label: '评估类型' },
+      { prop: 'totalScore', label: '总分' },
+      { prop: 'scoreLevel', label: '等级' },
+      { prop: 'assessor', label: '评估人' },
+      { prop: 'assessmentTime', label: '评估时间' }
+    ],
+    questionnaire: [
+      { prop: 'elderId', label: '老人ID' },
+      { prop: 'questionnaireType', label: '问卷类型' },
+      { prop: 'summary', label: '摘要' },
+      { prop: 'surveyor', label: '调查人' },
+      { prop: 'surveyTime', label: '调查时间' }
+    ],
+    image: [
+      { prop: 'elderId', label: '老人ID' },
+      { prop: 'imageType', label: '影像类型' },
+      { prop: 'diagnosisResult', label: '诊断结果' },
+      { prop: 'institution', label: '检查机构' },
+      { prop: 'diagnosisDate', label: '检查日期' },
+      { prop: 'doctorName', label: '检查医生' }
+    ]
+  }
+  const filenameMap = { all: '全部采集记录', smart: '智能评估', questionnaire: '健康问询', image: '影像报告' }
+  exportToExcel(tableData.value, columnsMap[activeTab.value] || columnsMap.all, filenameMap[activeTab.value] || '数据采集')
 }
 
 const handleReset = () => {

@@ -10,8 +10,14 @@ public interface InterventionPlanMapper {
     @Select("<script>SELECT * FROM intervention_plan <where>" +
             "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
             "<if test='status != null and status != \"\"'>AND status = #{status}</if>" +
-            "</where> ORDER BY create_time DESC</script>")
-    List<InterventionPlan> findAll(@Param("elderId") Long elderId, @Param("status") String status);
+            "</where> ORDER BY create_time DESC LIMIT #{offset}, #{limit}</script>")
+    List<InterventionPlan> findAll(@Param("elderId") Long elderId, @Param("status") String status, @Param("offset") int offset, @Param("limit") int limit);
+
+    @Select("<script>SELECT COUNT(*) FROM intervention_plan <where>" +
+            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
+            "<if test='status != null and status != \"\"'>AND status = #{status}</if>" +
+            "</where></script>")
+    Long count(@Param("elderId") Long elderId, @Param("status") String status);
 
     @Select("SELECT * FROM intervention_plan WHERE id = #{id}")
     InterventionPlan findById(@Param("id") Long id);

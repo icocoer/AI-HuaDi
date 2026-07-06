@@ -56,102 +56,27 @@
       </el-col>
     </el-row>
 
-    <!-- 数据采集统计 -->
-    <el-row :gutter="20" class="stats-row">
-      <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon" style="background: #f3e5f5; color: #7b1fa2;">
-              <el-icon :size="24"><DataAnalysis /></el-icon>
-            </div>
-            <div class="stat-info">
-              <h4>{{ collectionStats.totalCount || 0 }}</h4>
-              <p>总采集记录</p>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon" style="background: #e8f5e9; color: #388e3c;">
-              <el-icon :size="24"><Document /></el-icon>
-            </div>
-            <div class="stat-info">
-              <h4>{{ collectionStats.todayCount || 0 }}</h4>
-              <p>今日新增</p>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon" style="background: #fff3e0; color: #f57c00;">
-              <el-icon :size="24"><Clock /></el-icon>
-            </div>
-            <div class="stat-info">
-              <h4>{{ collectionStats.weekCount || 0 }}</h4>
-              <p>本周采集</p>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon" style="background: #e3f2fd; color: #1976d2;">
-              <el-icon :size="24"><TrendCharts /></el-icon>
-            </div>
-            <div class="stat-info">
-              <h4>{{ collectionStats.monthCount || 0 }}</h4>
-              <p>本月采集</p>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
-
-    <!-- 风险分布 & 数据来源 -->
+    <!-- 图表区域 -->
     <el-row :gutter="20" class="chart-row">
       <el-col :span="12">
         <el-card shadow="hover">
           <template #header><span class="card-title">风险等级分布</span></template>
-          <div class="chart-container">
-            <div class="source-item" v-for="item in riskData" :key="item.name">
-              <span class="source-label">{{ item.name }}</span>
-              <el-progress :percentage="item.percent" :color="item.color" :stroke-width="18" />
-              <span class="source-value">{{ item.value }}</span>
-            </div>
-          </div>
+          <div ref="riskChartRef" style="height: 300px;"></div>
         </el-card>
       </el-col>
       <el-col :span="12">
         <el-card shadow="hover">
           <template #header><span class="card-title">数据来源分布</span></template>
-          <div class="chart-container">
-            <div class="source-item" v-for="item in sourceData" :key="item.name">
-              <span class="source-label">{{ item.name }}</span>
-              <el-progress :percentage="item.percent" :color="item.color" :stroke-width="18" />
-              <span class="source-value">{{ item.value }}</span>
-            </div>
-          </div>
+          <div ref="sourceChartRef" style="height: 300px;"></div>
         </el-card>
       </el-col>
     </el-row>
 
-    <!-- 干预计划状态 -->
     <el-row :gutter="20" class="chart-row">
       <el-col :span="12">
         <el-card shadow="hover">
-          <template #header><span class="card-title">干预计划状态分布</span></template>
-          <div class="chart-container">
-            <div class="source-item" v-for="item in planData" :key="item.name">
-              <span class="source-label">{{ item.name }}</span>
-              <el-progress :percentage="item.percent" :color="item.color" :stroke-width="18" />
-              <span class="source-value">{{ item.value }}</span>
-            </div>
-          </div>
+          <template #header><span class="card-title">干预计划状态</span></template>
+          <div ref="planChartRef" style="height: 300px;"></div>
         </el-card>
       </el-col>
       <el-col :span="12">
@@ -177,21 +102,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import {
-  User, Document, Clock, DataAnalysis, List, Bell, TrendCharts,
-  Cpu, ChatLineSquare, Picture, EditPen, Warning
+  User, Document, DataAnalysis, List, Bell, EditPen, Warning
 } from '@element-plus/icons-vue'
+import * as echarts from 'echarts'
 import { analysisApi, dataCollectionApi } from '../api'
-
-const router = useRouter()
 
 const stats = ref({})
 const collectionStats = ref({})
-const riskData = ref([])
-const sourceData = ref([])
-const planData = ref([])
+const riskChartRef = ref(null)
+const sourceChartRef = ref(null)
+const planChartRef = ref(null)
+
+let riskChart = null
+let sourceChart = null
+let planChart = null
 
 const quickActions = [
   { label: '老人档案', desc: '管理老人健康档案', icon: Document, color: '#1976d2', path: '/elder-list' },
@@ -202,72 +128,100 @@ const quickActions = [
   { label: '系统管理', desc: '用户与字典管理', icon: User, color: '#1976d2', path: '/system' }
 ]
 
-const loadComprehensiveStats = async () => {
+const initChart = (el) => {
+  if (!el) return null
+  const chart = echarts.init(el)
+  window.addEventListener('resize', () => chart.resize())
+  return chart
+}
+
+const renderPieChart = (chart, title, data) => {
+  if (!chart) return
+  chart.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+    legend: { bottom: 0, left: 'center' },
+    series: [{
+      name: title,
+      type: 'pie',
+      radius: ['40%', '70%'],
+      center: ['50%', '45%'],
+      avoidLabelOverlap: false,
+      itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
+      label: { show: true, formatter: '{b}\n{d}%' },
+      data
+    }]
+  })
+}
+
+const renderBarChart = (chart, categories, data) => {
+  if (!chart) return
+  chart.setOption({
+    tooltip: { trigger: 'axis' },
+    xAxis: { type: 'category', data: categories },
+    yAxis: { type: 'value', minInterval: 1 },
+    series: [{
+      type: 'bar',
+      data,
+      barWidth: '40%',
+      itemStyle: {
+        borderRadius: [4, 4, 0, 0],
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: '#1976d2' },
+          { offset: 1, color: '#4fc3f7' }
+        ])
+      }
+    }]
+  })
+}
+
+const loadData = async () => {
   try {
     const res = await analysisApi.dashboard()
     if (res.data) {
       stats.value = res.data
       const dist = res.data.riskDistribution || {}
-      const low = parseInt(dist.low) || 0
-      const medium = parseInt(dist.medium) || 0
-      const high = parseInt(dist.high) || 0
-      const total = low + medium + high
-      riskData.value = [
-        { name: '低风险', value: low, percent: total > 0 ? Math.round(low / total * 100) : 0, color: '#388e3c' },
-        { name: '中风险', value: medium, percent: total > 0 ? Math.round(medium / total * 100) : 0, color: '#f57c00' },
-        { name: '高风险', value: high, percent: total > 0 ? Math.round(high / total * 100) : 0, color: '#d32f2f' }
-      ]
-      const plan = res.data.planStatusDistribution || {}
-      const pending = parseInt(plan.pending) || 0
-      const inProgress = parseInt(plan.in_progress) || 0
-      const completed = parseInt(plan.completed) || 0
-      const planTotal = pending + inProgress + completed
-      planData.value = [
-        { name: '待执行', value: pending, percent: planTotal > 0 ? Math.round(pending / planTotal * 100) : 0, color: '#909399' },
-        { name: '执行中', value: inProgress, percent: planTotal > 0 ? Math.round(inProgress / planTotal * 100) : 0, color: '#f57c00' },
-        { name: '已完成', value: completed, percent: planTotal > 0 ? Math.round(completed / planTotal * 100) : 0, color: '#388e3c' }
-      ]
-    }
-  } catch {
-    // Fallback mock data
-    riskData.value = [
-      { name: '低风险', value: 45, percent: 45, color: '#388e3c' },
-      { name: '中风险', value: 32, percent: 32, color: '#f57c00' },
-      { name: '高风险', value: 23, percent: 23, color: '#d32f2f' }
-    ]
-    planData.value = [
-      { name: '待执行', value: 10, percent: 25, color: '#909399' },
-      { name: '执行中', value: 18, percent: 45, color: '#f57c00' },
-      { name: '已完成', value: 12, percent: 30, color: '#388e3c' }
-    ]
-  }
-}
+      renderPieChart(riskChart, '风险等级分布', [
+        { value: parseInt(dist.low) || 0, name: '低风险', itemStyle: { color: '#388e3c' } },
+        { value: parseInt(dist.medium) || 0, name: '中风险', itemStyle: { color: '#f57c00' } },
+        { value: parseInt(dist.high) || 0, name: '高风险', itemStyle: { color: '#d32f2f' } }
+      ])
 
-const loadCollectionStats = async () => {
+      const plan = res.data.planStatusDistribution || {}
+      renderBarChart(planChart, ['待执行', '执行中', '已完成'], [
+        parseInt(plan.pending) || 0,
+        parseInt(plan.in_progress) || 0,
+        parseInt(plan.completed) || 0
+      ])
+    }
+  } catch { /* ignore */ }
+
   try {
     const res = await dataCollectionApi.statistics()
     if (res.data) {
       collectionStats.value = res.data
-      const smartCount = parseInt(res.data.smartCount) || 0
-      const questionnaireCount = parseInt(res.data.questionnaireCount) || 0
-      const imageCount = parseInt(res.data.imageCount) || 0
-      const total = smartCount + questionnaireCount + imageCount
-      sourceData.value = [
-        { name: '智能评估', value: smartCount, percent: total > 0 ? Math.round(smartCount / total * 100) : 0, color: '#1976d2' },
-        { name: '健康问询', value: questionnaireCount, percent: total > 0 ? Math.round(questionnaireCount / total * 100) : 0, color: '#388e3c' },
-        { name: '影像报告', value: imageCount, percent: total > 0 ? Math.round(imageCount / total * 100) : 0, color: '#7b1fa2' }
-      ]
+      renderPieChart(sourceChart, '数据来源分布', [
+        { value: parseInt(res.data.smartCount) || 0, name: '智能评估', itemStyle: { color: '#1976d2' } },
+        { value: parseInt(res.data.questionnaireCount) || 0, name: '健康问询', itemStyle: { color: '#388e3c' } },
+        { value: parseInt(res.data.imageCount) || 0, name: '影像报告', itemStyle: { color: '#7b1fa2' } }
+      ])
     }
-  } catch {
-    sourceData.value = [
-      { name: '智能评估', value: 180, percent: 43, color: '#1976d2' },
-      { name: '健康问询', value: 142, percent: 33, color: '#388e3c' },
-      { name: '影像报告', value: 101, percent: 24, color: '#7b1fa2' }
-    ]
-  }
+  } catch { /* ignore */ }
 }
 
-onMounted(() => { loadComprehensiveStats(); loadCollectionStats() })
+onMounted(async () => {
+  await nextTick()
+  riskChart = initChart(riskChartRef.value)
+  sourceChart = initChart(sourceChartRef.value)
+  planChart = initChart(planChartRef.value)
+  loadData()
+})
+
+onBeforeUnmount(() => {
+  riskChart?.dispose()
+  sourceChart?.dispose()
+  planChart?.dispose()
+  window.removeEventListener('resize', () => {})
+})
 </script>
 
 <style scoped>
@@ -282,11 +236,6 @@ onMounted(() => { loadComprehensiveStats(); loadCollectionStats() })
 .stat-info p { font-size: 13px; color: #999; margin: 2px 0 0 0; }
 .chart-row { margin-bottom: 20px; }
 .card-title { font-size: 16px; font-weight: 600; }
-.chart-container { padding: 10px 0; }
-.source-item { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-.source-label { width: 70px; font-size: 13px; color: #666; text-align: right; flex-shrink: 0; }
-.source-value { width: 40px; font-size: 13px; color: #333; font-weight: 600; text-align: right; flex-shrink: 0; }
-.source-item :deep(.el-progress) { flex: 1; }
 .quick-links { padding: 0; }
 .quick-link-card {
   display: flex; align-items: center; gap: 12px; padding: 14px;

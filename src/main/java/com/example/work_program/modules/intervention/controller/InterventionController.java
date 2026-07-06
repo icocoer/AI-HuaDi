@@ -1,6 +1,7 @@
 package com.example.work_program.modules.intervention.controller;
 
 import com.example.work_program.annotation.LoginRequired;
+import com.example.work_program.common.PageResult;
 import com.example.work_program.common.Result;
 import com.example.work_program.modules.intervention.entity.InterventionExecution;
 import com.example.work_program.modules.intervention.entity.InterventionPlan;
@@ -26,8 +27,8 @@ public class InterventionController {
 
     @GetMapping("/statistics")
     public Result<Map<String, Object>> getStatistics() {
-        List<InterventionPlan> plans = interventionPlanService.findAll(null, null);
-        List<InterventionExecution> executions = interventionExecutionService.findAll(null, null);
+        List<InterventionPlan> plans = interventionPlanService.findAll(null, null, 1, 10000).getList();
+        List<InterventionExecution> executions = interventionExecutionService.findAll(null, null, 1, 10000).getList();
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalPlans", plans.size());
@@ -46,10 +47,10 @@ public class InterventionController {
     @GetMapping("/elder/{elderId}/plans")
     public Result<Map<String, Object>> getElderPlans(@PathVariable Long elderId) {
         Map<String, Object> result = new HashMap<>();
-        List<InterventionPlan> plans = interventionPlanService.findAll(elderId, null);
+        List<InterventionPlan> plans = interventionPlanService.findAll(elderId, null, 1, 10000).getList();
         result.put("plans", plans);
         if (!plans.isEmpty()) {
-            List<InterventionExecution> executions = interventionExecutionService.findAll(plans.get(0).getId(), elderId);
+            List<InterventionExecution> executions = interventionExecutionService.findAll(plans.get(0).getId(), elderId, 1, 10000).getList();
             result.put("latestExecutions", executions);
         }
         return Result.success(result);

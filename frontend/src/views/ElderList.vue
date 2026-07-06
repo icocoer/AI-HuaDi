@@ -133,6 +133,7 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { elderApi } from '../api'
+import { exportToExcel } from '../utils/export'
 
 const tableData = ref([])
 const loading = ref(false)
@@ -145,6 +146,9 @@ const formRef = ref(null)
 const searchName = ref('')
 const searchRiskLevel = ref('')
 const profile = ref({})
+const pageNum = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 
 const form = ref({
   name: '', gender: 'M', birthDate: '', idCard: '', phone: '', address: '',
@@ -162,9 +166,26 @@ const dialogTitle = computed(() => isEdit.value ? '编辑档案' : '添加档案
 const loadData = async () => {
   loading.value = true
   try {
-    const res = await elderApi.list({ name: searchName.value, riskLevel: searchRiskLevel.value })
-    tableData.value = res.data || []
-  } catch { tableData.value = [] } finally { loading.value = false }
+    const res = await elderApi.list({ name: searchName.value, riskLevel: searchRiskLevel.value, pageNum: pageNum.value, pageSize: pageSize.value })
+    tableData.value = res.data.list || []
+    total.value = res.data.total || 0
+  } catch { tableData.value = []; total.value = 0 } finally { loading.value = false }
+}
+
+const handleSearch = () => { pageNum.value = 1; loadData() }
+
+const handleExport = () => {
+  exportToExcel(tableData.value, [
+    { prop: 'id', label: 'ID' },
+    { prop: 'name', label: '姓名' },
+    { prop: 'gender', label: '性别' },
+    { prop: 'birthDate', label: '出生日期' },
+    { prop: 'phone', label: '电话' },
+    { prop: 'riskLevel', label: '风险等级' },
+    { prop: 'address', label: '地址' },
+    { prop: 'emergencyContact', label: '紧急联系人' },
+    { prop: 'emergencyPhone', label: '紧急电话' }
+  ], '老人健康档案')
 }
 
 const openAdd = () => { isEdit.value = false; editId.value = null; dialogVisible.value = true }

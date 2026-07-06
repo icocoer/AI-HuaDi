@@ -1,23 +1,48 @@
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElLoading } from 'element-plus'
+import router from '../router'
 
 const request = axios.create({
   baseURL: '/api',
-  timeout: 10000
+  timeout: 15000
 })
+
+let loadingInstance = null
+let loadingCount = 0
+
+const showLoading = () => {
+  if (loadingCount === 0) {
+    loadingInstance = ElLoading.service({ fullscreen: true, text: '加载中...' })
+  }
+  loadingCount++
+}
+
+const hideLoading = () => {
+  loadingCount--
+  if (loadingCount <= 0) {
+    loadingCount = 0
+    if (loadingInstance) {
+      loadingInstance.close()
+      loadingInstance = null
+    }
+  }
+}
 
 request.interceptors.request.use(config => {
   const token = localStorage.getItem('token')
   if (token) {
     config.headers.Authorization = 'Bearer ' + token
   }
+  if (config.method !== 'get') {
+    showLoading()
+  }
   return config
 })
 
 request.interceptors.response.use(
   response => {
+    hideLoading()
     const res = response.data
-    // 兼容 Spring Boot 默认错误格式 (无 code 字段)
     if (res.code == null && res.status != null) {
       ElMessage.error(res.error || res.message || '服务器错误')
       return Promise.reject(new Error(res.error || '服务器错误'))
@@ -29,11 +54,13 @@ request.interceptors.response.use(
     return res
   },
   error => {
+    hideLoading()
     if (error.response) {
       if (error.response.status === 401) {
         localStorage.removeItem('token')
         localStorage.removeItem('user')
-        window.location.href = '/login'
+        router.push('/login')
+        return Promise.reject(error)
       }
       const msg = error.response.data?.message || error.response.data?.error || '请求失败'
       ElMessage.error(msg)

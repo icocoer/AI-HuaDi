@@ -10,8 +10,14 @@ public interface HealthDataCollectionMapper {
     @Select("<script>SELECT * FROM health_data_collection <where>" +
             "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
             "<if test='dataSource != null and dataSource != \"\"'>AND data_source = #{dataSource}</if>" +
-            "</where> ORDER BY collection_date DESC</script>")
-    List<HealthDataCollection> findAll(@Param("elderId") Long elderId, @Param("dataSource") String dataSource);
+            "</where> ORDER BY collection_date DESC LIMIT #{offset}, #{limit}</script>")
+    List<HealthDataCollection> findAll(@Param("elderId") Long elderId, @Param("dataSource") String dataSource, @Param("offset") int offset, @Param("limit") int limit);
+
+    @Select("<script>SELECT COUNT(*) FROM health_data_collection <where>" +
+            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
+            "<if test='dataSource != null and dataSource != \"\"'>AND data_source = #{dataSource}</if>" +
+            "</where></script>")
+    Long count(@Param("elderId") Long elderId, @Param("dataSource") String dataSource);
 
     @Select("SELECT * FROM health_data_collection WHERE id = #{id}")
     HealthDataCollection findById(@Param("id") Long id);

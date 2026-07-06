@@ -27,7 +27,8 @@ public class ElderController {
 
     @GetMapping("/statistics")
     public Result<Map<String, Object>> getStatistics() {
-        List<ElderHealthRecord> all = elderHealthRecordService.findAll(null, null);
+        var pageResult = elderHealthRecordService.findAll(null, null, 1, 10000);
+        List<ElderHealthRecord> all = pageResult.getList();
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalCount", all.size());
         stats.put("lowCount", all.stream().filter(e -> "low".equals(e.getRiskLevel())).count());
@@ -56,7 +57,8 @@ public class ElderController {
     public Result<Map<String, Object>> getFullProfile(@PathVariable Long id) {
         Map<String, Object> profile = new HashMap<>();
         profile.put("record", elderHealthRecordService.findById(id));
-        List<CognitiveAssessment> assessments = cognitiveAssessmentService.findAll(id, null);
+        var assessmentPage = cognitiveAssessmentService.findAll(id, null, 1, 10000);
+        List<CognitiveAssessment> assessments = assessmentPage.getList();
         profile.put("assessments", assessments);
         profile.put("latestAssessment", assessments.isEmpty() ? null : assessments.get(0));
         return Result.success(profile);

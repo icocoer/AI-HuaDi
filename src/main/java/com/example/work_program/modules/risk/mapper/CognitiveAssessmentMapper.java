@@ -10,8 +10,14 @@ public interface CognitiveAssessmentMapper {
     @Select("<script>SELECT * FROM cognitive_assessment <where>" +
             "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
             "<if test='riskLevel != null and riskLevel != \"\"'>AND risk_level = #{riskLevel}</if>" +
-            "</where> ORDER BY assessment_time DESC</script>")
-    List<CognitiveAssessment> findAll(@Param("elderId") Long elderId, @Param("riskLevel") String riskLevel);
+            "</where> ORDER BY assessment_time DESC LIMIT #{offset}, #{limit}</script>")
+    List<CognitiveAssessment> findAll(@Param("elderId") Long elderId, @Param("riskLevel") String riskLevel, @Param("offset") int offset, @Param("limit") int limit);
+
+    @Select("<script>SELECT COUNT(*) FROM cognitive_assessment <where>" +
+            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
+            "<if test='riskLevel != null and riskLevel != \"\"'>AND risk_level = #{riskLevel}</if>" +
+            "</where></script>")
+    Long count(@Param("elderId") Long elderId, @Param("riskLevel") String riskLevel);
 
     @Select("SELECT * FROM cognitive_assessment WHERE id = #{id}")
     CognitiveAssessment findById(@Param("id") Long id);

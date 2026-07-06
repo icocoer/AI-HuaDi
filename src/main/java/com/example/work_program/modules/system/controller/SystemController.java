@@ -1,10 +1,12 @@
 package com.example.work_program.modules.system.controller;
 
 import com.example.work_program.annotation.LoginRequired;
+import com.example.work_program.annotation.LogOperation;
 import com.example.work_program.common.Result;
 import com.example.work_program.modules.system.entity.SysDict;
 import com.example.work_program.modules.system.service.SysDictService;
 import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -36,20 +38,23 @@ public class SystemController {
 
     @PostMapping("/dict/add")
     @LoginRequired(roles = {"admin"})
-    public Result<Void> addDict(@RequestBody SysDict dict) {
+    @LogOperation("添加字典")
+    public Result<Void> addDict(@Valid @RequestBody SysDict dict) {
         sysDictService.add(dict);
         return Result.success("添加成功", null);
     }
 
     @PutMapping("/dict/update")
     @LoginRequired(roles = {"admin"})
-    public Result<Void> updateDict(@RequestBody SysDict dict) {
+    @LogOperation("更新字典")
+    public Result<Void> updateDict(@Valid @RequestBody SysDict dict) {
         sysDictService.update(dict);
         return Result.success("更新成功", null);
     }
 
     @DeleteMapping("/dict/delete/{id}")
     @LoginRequired(roles = {"admin"})
+    @LogOperation("删除字典")
     public Result<Void> deleteDict(@PathVariable Long id) {
         sysDictService.deleteById(id);
         return Result.success("删除成功", null);

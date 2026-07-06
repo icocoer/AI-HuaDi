@@ -1,10 +1,12 @@
 package com.example.work_program.modules.datacollection.controller;
 
 import com.example.work_program.annotation.LoginRequired;
+import com.example.work_program.annotation.LogOperation;
 import com.example.work_program.common.Result;
 import com.example.work_program.modules.datacollection.entity.SmartAssessment;
 import com.example.work_program.modules.datacollection.service.SmartAssessmentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -51,7 +53,8 @@ public class SmartAssessmentController {
      */
     @PostMapping("/add")
     @LoginRequired(roles = {"admin", "doctor", "nurse"})
-    public Result<Void> add(@RequestBody SmartAssessment assessment) {
+    @LogOperation("添加智能评估")
+    public Result<Void> add(@Valid @RequestBody SmartAssessment assessment) {
         smartAssessmentService.add(assessment);
         return Result.success("智能评估记录添加成功", null);
     }
@@ -61,7 +64,8 @@ public class SmartAssessmentController {
      */
     @PutMapping("/update")
     @LoginRequired(roles = {"admin", "doctor"})
-    public Result<Void> update(@RequestBody SmartAssessment assessment) {
+    @LogOperation("更新智能评估")
+    public Result<Void> update(@Valid @RequestBody SmartAssessment assessment) {
         smartAssessmentService.update(assessment);
         return Result.success("更新成功", null);
     }
@@ -71,6 +75,7 @@ public class SmartAssessmentController {
      */
     @DeleteMapping("/delete/{id}")
     @LoginRequired(roles = {"admin", "doctor"})
+    @LogOperation("删除智能评估")
     public Result<Void> delete(@PathVariable Long id) {
         smartAssessmentService.deleteById(id);
         return Result.success("删除成功", null);

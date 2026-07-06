@@ -1,10 +1,12 @@
 package com.example.work_program.modules.datacollection.controller;
 
 import com.example.work_program.annotation.LoginRequired;
+import com.example.work_program.annotation.LogOperation;
 import com.example.work_program.common.Result;
 import com.example.work_program.modules.datacollection.entity.ImageReport;
 import com.example.work_program.modules.datacollection.service.ImageReportService;
 import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -51,7 +53,8 @@ public class ImageReportController {
      */
     @PostMapping("/add")
     @LoginRequired(roles = {"admin", "doctor", "nurse"})
-    public Result<Void> add(@RequestBody ImageReport report) {
+    @LogOperation("添加影像报告")
+    public Result<Void> add(@Valid @RequestBody ImageReport report) {
         imageReportService.add(report);
         return Result.success("影像报告添加成功", null);
     }
@@ -61,7 +64,8 @@ public class ImageReportController {
      */
     @PutMapping("/update")
     @LoginRequired(roles = {"admin", "doctor"})
-    public Result<Void> update(@RequestBody ImageReport report) {
+    @LogOperation("更新影像报告")
+    public Result<Void> update(@Valid @RequestBody ImageReport report) {
         imageReportService.update(report);
         return Result.success("更新成功", null);
     }
@@ -71,6 +75,7 @@ public class ImageReportController {
      */
     @DeleteMapping("/delete/{id}")
     @LoginRequired(roles = {"admin", "doctor"})
+    @LogOperation("删除影像报告")
     public Result<Void> delete(@PathVariable Long id) {
         imageReportService.deleteById(id);
         return Result.success("删除成功", null);
