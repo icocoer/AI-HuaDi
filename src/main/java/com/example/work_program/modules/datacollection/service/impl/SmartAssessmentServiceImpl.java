@@ -1,11 +1,13 @@
 package com.example.work_program.modules.datacollection.service.impl;
 
+import com.example.work_program.common.PageResult;
 import com.example.work_program.modules.datacollection.entity.SmartAssessment;
 import com.example.work_program.modules.datacollection.mapper.SmartAssessmentMapper;
 import com.example.work_program.modules.datacollection.service.SmartAssessmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -30,8 +32,14 @@ public class SmartAssessmentServiceImpl implements SmartAssessmentService {
     }
 
     @Override
-    public List<SmartAssessment> findAll(Long elderId, String assessmentType) {
-        return smartAssessmentMapper.findAll(elderId, assessmentType);
+    public PageResult<SmartAssessment> findAll(Long elderId, String assessmentType, int pageNum, int pageSize) {
+        int offset = (pageNum - 1) * pageSize;
+        Long total = smartAssessmentMapper.count(elderId, assessmentType);
+        if (total == 0) {
+            return new PageResult<>(Collections.emptyList(), 0L, pageNum, pageSize);
+        }
+        List<SmartAssessment> list = smartAssessmentMapper.findAll(elderId, assessmentType, offset, pageSize);
+        return new PageResult<>(list, total, pageNum, pageSize);
     }
 
     @Override

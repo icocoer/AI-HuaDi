@@ -9,7 +9,9 @@
       </div>
 
       <div class="search-bar">
-        <el-input v-model="searchElderId" placeholder="老人ID" clearable style="width: 140px" @clear="loadData" @keyup.enter="loadData" />
+        <el-select v-model="searchElderId" placeholder="选择老人" clearable filterable style="width: 200px" @clear="loadData" @change="loadData">
+          <el-option v-for="e in elderList" :key="e.id" :label="`${e.name}（${e.id}）`" :value="e.id" />
+        </el-select>
         <el-select v-model="searchRiskLevel" placeholder="风险等级" clearable style="width: 140px; margin-left: 10px" @clear="loadData" @change="loadData">
           <el-option label="低风险" value="low" /><el-option label="中风险" value="medium" /><el-option label="高风险" value="high" />
         </el-select>
@@ -47,7 +49,11 @@
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="老人ID" prop="elderId"><el-input v-model.number="form.elderId" /></el-form-item>
+            <el-form-item label="老人" prop="elderId">
+              <el-select v-model="form.elderId" placeholder="选择老人" filterable style="width: 100%">
+                <el-option v-for="e in elderList" :key="e.id" :label="`${e.name}（${e.id}）`" :value="e.id" />
+              </el-select>
+            </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="评估类型" prop="assessmentType">
@@ -71,7 +77,11 @@
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="评估人" prop="assessor"><el-input v-model="form.assessor" /></el-form-item>
+            <el-form-item label="评估人" prop="assessor">
+              <el-select v-model="form.assessor" placeholder="选择评估人" filterable :disabled="user.role !== 'admin'" style="width: 100%">
+                <el-option v-for="u in doctorList" :key="u.id" :label="`${u.realName || u.username}（${u.role}）`" :value="u.realName || u.username" />
+              </el-select>
+            </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="下次评估" prop="nextAssessmentDate"><el-input v-model="form.nextAssessmentDate" placeholder="yyyy-MM-dd" /></el-form-item>
@@ -111,10 +121,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { assessmentApi, riskApi } from '../api'
+import { assessmentApi, riskApi, elderApi, userApi } from '../api'
 import { exportToExcel } from '../utils/export'
 
+const user = JSON.parse(localStorage.getItem('user') || '{}')
+
 const tableData = ref([])
+const elderList = ref([])
+const doctorList = ref([])
 const loading = ref(false)
 const submitting = ref(false)
 const dialogVisible = ref(false)
@@ -135,7 +149,7 @@ const form = ref({
 })
 
 const rules = {
-  elderId: [{ required: true, message: '请输入老人ID', trigger: 'blur' }],
+  elderId: [{ required: true, message: '请选择老人', trigger: 'change' }],
   assessmentType: [{ required: true, message: '请选择评估类型', trigger: 'change' }],
   totalScore: [{ required: true, message: '请输入总分', trigger: 'blur' }]
 }
@@ -176,7 +190,15 @@ const handleExport = () => {
   ], '认知评估列表')
 }
 
-const openAdd = () => { isEdit.value = false; editId.value = null; dialogVisible.value = true }
+const openAdd = () => {
+  isEdit.value = false; editId.value = null
+  resetForm()
+  // 医生角色默认评估人为自己
+  if (user.role !== 'admin') {
+    form.value.assessor = user.realName || user.username
+  }
+  dialogVisible.value = true
+}
 
 const openEdit = (row) => {
   isEdit.value = true; editId.value = row.id
@@ -218,7 +240,25 @@ const assessRisk = async (elderId) => {
   } catch { }
 }
 
-onMounted(loadData)
+const loadElders = async () => {
+  try {
+    const res = await elderApi.list({ pageNum: 1, pageSize: 1000 })
+    elderList.value = res.data.list || []
+  } catch { elderList.value = [] }
+}
+
+const loadDoctors = async () => {
+  try {
+    const res = await userApi.list({ pageNum: 1, pageSize: 1000 })
+    doctorList.value = (res.data.list || []).filter(u => u.role === 'admin' || u.role === 'doctor')
+  } catch { doctorList.value = [] }
+}
+
+onMounted(() => {
+  loadData()
+  loadElders()
+  loadDoctors()
+})
 </script>
 
 <style scoped>

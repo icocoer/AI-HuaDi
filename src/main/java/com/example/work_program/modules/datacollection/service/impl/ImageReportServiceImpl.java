@@ -1,11 +1,13 @@
 package com.example.work_program.modules.datacollection.service.impl;
 
+import com.example.work_program.common.PageResult;
 import com.example.work_program.modules.datacollection.entity.ImageReport;
 import com.example.work_program.modules.datacollection.mapper.ImageReportMapper;
 import com.example.work_program.modules.datacollection.service.ImageReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -30,8 +32,14 @@ public class ImageReportServiceImpl implements ImageReportService {
     }
 
     @Override
-    public List<ImageReport> findAll(Long elderId, String imageType) {
-        return imageReportMapper.findAll(elderId, imageType);
+    public PageResult<ImageReport> findAll(Long elderId, String imageType, int pageNum, int pageSize) {
+        int offset = (pageNum - 1) * pageSize;
+        Long total = imageReportMapper.count(elderId, imageType);
+        if (total == 0) {
+            return new PageResult<>(Collections.emptyList(), 0L, pageNum, pageSize);
+        }
+        List<ImageReport> list = imageReportMapper.findAll(elderId, imageType, offset, pageSize);
+        return new PageResult<>(list, total, pageNum, pageSize);
     }
 
     @Override

@@ -64,6 +64,30 @@ const routes = [
         name: 'SystemManage',
         component: () => import('../views/SystemManage.vue'),
         meta: { title: '系统管理', roles: ['admin'] }
+      },
+      {
+        path: 'homecare/visit-plan',
+        name: 'HomecareVisitPlan',
+        component: () => import('../views/HomecareVisitPlan.vue'),
+        meta: { title: '随访计划管理' }
+      },
+      {
+        path: 'homecare/health-monitor',
+        name: 'HomecareHealthMonitor',
+        component: () => import('../views/HomecareHealthMonitor.vue'),
+        meta: { title: '健康监测' }
+      },
+      {
+        path: 'homecare/health-alert',
+        name: 'HomecareHealthAlert',
+        component: () => import('../views/HomecareHealthAlert.vue'),
+        meta: { title: '健康预警' }
+      },
+      {
+        path: 'homecare/message',
+        name: 'HomecareMessage',
+        component: () => import('../views/HomecareMessage.vue'),
+        meta: { title: '医患沟通' }
       }
     ]
   }

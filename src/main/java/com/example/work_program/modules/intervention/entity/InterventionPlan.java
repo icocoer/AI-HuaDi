@@ -26,7 +26,7 @@ public class InterventionPlan {
     private LocalDate startDate;
     private LocalDate endDate;
     private String responsibleDoctor;
-    private Integer status;
+    private String status;
     private String remark;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

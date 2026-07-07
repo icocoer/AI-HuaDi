@@ -62,7 +62,9 @@
         <el-card shadow="hover">
           <template #header><span class="card-title">快速风险评估</span></template>
           <div class="quick-assess">
-            <el-input v-model="assessElderId" placeholder="输入老人ID" style="width: 200px" />
+            <el-select v-model="assessElderId" placeholder="选择老人" filterable style="width: 200px">
+              <el-option v-for="e in elderList" :key="e.id" :label="`${e.name}（${e.id}）`" :value="e.id" />
+            </el-select>
             <el-button type="primary" @click="doQuickAssess" :loading="assessing" style="margin-left: 10px">
               开始评估
             </el-button>
@@ -121,12 +123,13 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { CircleCheck, WarningFilled, CircleClose, Bell } from '@element-plus/icons-vue'
-import { riskApi } from '../api'
+import { riskApi, elderApi } from '../api'
 
 const riskStats = ref({})
 const warnings = ref([])
+const elderList = ref([])
 const unreadOnly = ref(false)
-const assessElderId = ref('')
+const assessElderId = ref(null)
 const assessing = ref(false)
 const assessResult = ref({})
 
@@ -145,26 +148,23 @@ const loadWarnings = async () => {
 }
 
 const doQuickAssess = async () => {
-  const val = parseInt(assessElderId.value, 10)
-  if (!val || isNaN(val)) { ElMessage.warning('请输入有效的老人ID（数字）'); return }
+  if (!assessElderId.value) { ElMessage.warning('请选择老人'); return }
   assessing.value = true
   try {
-    const res = await riskApi.assess(val)
+    const res = await riskApi.assess(assessElderId.value)
     assessResult.value = res.data || {}
     loadStats()
   } catch { } finally { assessing.value = false }
 }
 
-const markRead = async (id) => {
+const loadElders = async () => {
   try {
-    await riskApi.markRead(id)
-    ElMessage.success('已标记为已读')
-    loadWarnings()
-    loadStats()
-  } catch { }
+    const res = await elderApi.list({ pageNum: 1, pageSize: 1000 })
+    elderList.value = res.data.list || []
+  } catch { elderList.value = [] }
 }
 
-onMounted(() => { loadStats(); loadWarnings() })
+onMounted(() => { loadStats(); loadWarnings(); loadElders() })
 </script>
 
 <style scoped>

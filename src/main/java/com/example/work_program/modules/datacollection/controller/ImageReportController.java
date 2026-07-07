@@ -2,6 +2,7 @@ package com.example.work_program.modules.datacollection.controller;
 
 import com.example.work_program.annotation.LoginRequired;
 import com.example.work_program.annotation.LogOperation;
+import com.example.work_program.common.PageResult;
 import com.example.work_program.common.Result;
 import com.example.work_program.modules.datacollection.entity.ImageReport;
 import com.example.work_program.modules.datacollection.service.ImageReportService;
@@ -26,10 +27,12 @@ public class ImageReportController {
      * 分页查询影像报告
      */
     @GetMapping("/list")
-    public Result<List<ImageReport>> list(
+    public Result<PageResult<ImageReport>> list(
             @RequestParam(required = false) Long elderId,
-            @RequestParam(required = false) String imageType) {
-        return Result.success(imageReportService.findAll(elderId, imageType));
+            @RequestParam(required = false) String imageType,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return Result.success(imageReportService.findAll(elderId, imageType, pageNum, pageSize));
     }
 
     /**

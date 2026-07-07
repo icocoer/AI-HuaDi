@@ -1,11 +1,13 @@
 package com.example.work_program.modules.datacollection.service.impl;
 
+import com.example.work_program.common.PageResult;
 import com.example.work_program.modules.datacollection.entity.HealthQuestionnaire;
 import com.example.work_program.modules.datacollection.mapper.HealthQuestionnaireMapper;
 import com.example.work_program.modules.datacollection.service.HealthQuestionnaireService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -30,8 +32,14 @@ public class HealthQuestionnaireServiceImpl implements HealthQuestionnaireServic
     }
 
     @Override
-    public List<HealthQuestionnaire> findAll(Long elderId, String questionnaireType) {
-        return healthQuestionnaireMapper.findAll(elderId, questionnaireType);
+    public PageResult<HealthQuestionnaire> findAll(Long elderId, String questionnaireType, int pageNum, int pageSize) {
+        int offset = (pageNum - 1) * pageSize;
+        Long total = healthQuestionnaireMapper.count(elderId, questionnaireType);
+        if (total == 0) {
+            return new PageResult<>(Collections.emptyList(), 0L, pageNum, pageSize);
+        }
+        List<HealthQuestionnaire> list = healthQuestionnaireMapper.findAll(elderId, questionnaireType, offset, pageSize);
+        return new PageResult<>(list, total, pageNum, pageSize);
     }
 
     @Override

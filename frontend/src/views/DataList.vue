@@ -19,8 +19,10 @@
 
       <!-- 搜索区 -->
       <el-form :model="query" inline class="search-form">
-        <el-form-item label="老人ID">
-          <el-input v-model="query.elderId" placeholder="请输入老人ID" clearable style="width: 150px" />
+        <el-form-item label="老人">
+          <el-select v-model="query.elderId" placeholder="选择老人" clearable filterable style="width: 200px">
+            <el-option v-for="e in elderList" :key="e.id" :label="`${e.name}（${e.id}）`" :value="e.id" />
+          </el-select>
         </el-form-item>
         <el-form-item label="数据来源" v-if="activeTab === 'all'">
           <el-select v-model="query.dataSource" placeholder="全部" clearable style="width: 140px">
@@ -158,7 +160,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { dataCollectionApi, smartAssessmentApi, healthQuestionnaireApi, imageReportApi } from '../api'
+import { dataCollectionApi, smartAssessmentApi, healthQuestionnaireApi, imageReportApi, elderApi } from '../api'
 import { exportToExcel } from '../utils/export'
 import AddEditModal from '../components/AddEditModal.vue'
 import DetailModal from '../components/DetailModal.vue'
@@ -166,6 +168,7 @@ import DetailModal from '../components/DetailModal.vue'
 const route = useRoute()
 const activeTab = ref('all')
 const tableData = ref([])
+const elderList = ref([])
 const loading = ref(false)
 const total = ref(0)
 const pageNum = ref(1)
@@ -388,9 +391,17 @@ watch(() => route.query.tab, (val) => {
   if (val) activeTab.value = val
 })
 
+const loadElders = async () => {
+  try {
+    const res = await elderApi.list({ pageNum: 1, pageSize: 1000 })
+    elderList.value = res.data.list || []
+  } catch { elderList.value = [] }
+}
+
 onMounted(() => {
   if (route.query.tab) activeTab.value = route.query.tab
   loadData()
+  loadElders()
 })
 </script>
 

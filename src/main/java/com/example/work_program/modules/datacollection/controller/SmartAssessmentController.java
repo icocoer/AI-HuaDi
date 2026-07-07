@@ -2,6 +2,7 @@ package com.example.work_program.modules.datacollection.controller;
 
 import com.example.work_program.annotation.LoginRequired;
 import com.example.work_program.annotation.LogOperation;
+import com.example.work_program.common.PageResult;
 import com.example.work_program.common.Result;
 import com.example.work_program.modules.datacollection.entity.SmartAssessment;
 import com.example.work_program.modules.datacollection.service.SmartAssessmentService;
@@ -26,10 +27,12 @@ public class SmartAssessmentController {
      * 分页查询智能评估记录
      */
     @GetMapping("/list")
-    public Result<List<SmartAssessment>> list(
+    public Result<PageResult<SmartAssessment>> list(
             @RequestParam(required = false) Long elderId,
-            @RequestParam(required = false) String assessmentType) {
-        return Result.success(smartAssessmentService.findAll(elderId, assessmentType));
+            @RequestParam(required = false) String assessmentType,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return Result.success(smartAssessmentService.findAll(elderId, assessmentType, pageNum, pageSize));
     }
 
     /**

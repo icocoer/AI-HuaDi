@@ -9,8 +9,9 @@
       </div>
 
       <div class="search-bar">
-        <el-input v-model="searchPlanId" placeholder="计划ID" clearable style="width: 140px" @clear="loadData" @keyup.enter="loadData" />
-        <el-input v-model="searchElderId" placeholder="老人ID" clearable style="width: 140px; margin-left: 10px" @clear="loadData" @keyup.enter="loadData" />
+        <el-select v-model="searchElderId" placeholder="选择老人" clearable filterable style="width: 200px" @clear="loadData" @change="loadData">
+          <el-option v-for="e in elderList" :key="e.id" :label="`${e.name}（${e.id}）`" :value="e.id" />
+        </el-select>
         <el-button type="primary" @click="loadData" style="margin-left: 10px">查询</el-button>
       </div>
 
@@ -44,13 +45,12 @@
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="计划ID" prop="planId"><el-input v-model.number="form.planId" /></el-form-item>
+            <el-form-item label="老人" prop="elderId">
+              <el-select v-model="form.elderId" placeholder="选择老人" filterable style="width: 100%">
+                <el-option v-for="e in elderList" :key="e.id" :label="`${e.name}（${e.id}）`" :value="e.id" />
+              </el-select>
+            </el-form-item>
           </el-col>
-          <el-col :span="12">
-            <el-form-item label="老人ID" prop="elderId"><el-input v-model.number="form.elderId" /></el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="执行类型" prop="executionType">
               <el-select v-model="form.executionType" style="width: 100%">
@@ -97,10 +97,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { interventionExecutionApi } from '../api'
+import { interventionExecutionApi, elderApi } from '../api'
 import { exportToExcel } from '../utils/export'
 
 const tableData = ref([])
+const elderList = ref([])
 const loading = ref(false)
 const submitting = ref(false)
 const dialogVisible = ref(false)
@@ -119,8 +120,7 @@ const form = ref({
 })
 
 const rules = {
-  planId: [{ required: true, message: '请输入计划ID', trigger: 'blur' }],
-  elderId: [{ required: true, message: '请输入老人ID', trigger: 'blur' }],
+  elderId: [{ required: true, message: '请选择老人', trigger: 'change' }],
   executionType: [{ required: true, message: '请选择执行类型', trigger: 'change' }],
   executionDate: [{ required: true, message: '请输入执行日期', trigger: 'blur' }]
 }
@@ -197,7 +197,17 @@ const handleDelete = async (row) => {
   try { await interventionExecutionApi.delete(row.id); ElMessage.success('删除成功'); loadData() } catch { }
 }
 
-onMounted(loadData)
+const loadElders = async () => {
+  try {
+    const res = await elderApi.list({ pageNum: 1, pageSize: 1000 })
+    elderList.value = res.data.list || []
+  } catch { elderList.value = [] }
+}
+
+onMounted(() => {
+  loadData()
+  loadElders()
+})
 </script>
 
 <style scoped>

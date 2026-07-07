@@ -2,6 +2,7 @@ package com.example.work_program.modules.datacollection.controller;
 
 import com.example.work_program.annotation.LoginRequired;
 import com.example.work_program.annotation.LogOperation;
+import com.example.work_program.common.PageResult;
 import com.example.work_program.common.Result;
 import com.example.work_program.modules.datacollection.entity.HealthQuestionnaire;
 import com.example.work_program.modules.datacollection.service.HealthQuestionnaireService;
@@ -26,10 +27,12 @@ public class HealthQuestionnaireController {
      * 分页查询健康问询记录
      */
     @GetMapping("/list")
-    public Result<List<HealthQuestionnaire>> list(
+    public Result<PageResult<HealthQuestionnaire>> list(
             @RequestParam(required = false) Long elderId,
-            @RequestParam(required = false) String questionnaireType) {
-        return Result.success(healthQuestionnaireService.findAll(elderId, questionnaireType));
+            @RequestParam(required = false) String questionnaireType,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return Result.success(healthQuestionnaireService.findAll(elderId, questionnaireType, pageNum, pageSize));
     }
 
     /**

@@ -2,7 +2,7 @@
   <div class="dashboard">
     <!-- 核心统计卡片 -->
     <el-row :gutter="20" class="stats-row">
-      <el-col :span="6">
+      <el-col :span="4">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-content">
             <div class="stat-icon" style="background: #e3f2fd; color: #1976d2;">
@@ -15,7 +15,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="4">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-content">
             <div class="stat-icon" style="background: #e8f5e9; color: #388e3c;">
@@ -28,7 +28,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="4">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-content">
             <div class="stat-icon" style="background: #fff3e0; color: #f57c00;">
@@ -41,15 +41,41 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="4">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-content">
-            <div class="stat-icon" style="background: #ffebee; color: #d32f2f;">
+            <div class="stat-icon" style="background: #e8f5e9; color: #388e3c;">
+              <el-icon :size="24"><House /></el-icon>
+            </div>
+            <div class="stat-info">
+              <h4>{{ stats.totalVisitPlans || 0 }}</h4>
+              <p>随访计划数</p>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="4">
+        <el-card shadow="hover" class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon" style="background: #fff3e0; color: #f57c00;">
               <el-icon :size="24"><Bell /></el-icon>
             </div>
             <div class="stat-info">
-              <h4>{{ stats.unreadWarnings || 0 }}</h4>
-              <p>未读预警</p>
+              <h4>{{ stats.unreadAlerts || 0 }}</h4>
+              <p>健康预警</p>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="4">
+        <el-card shadow="hover" class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon" style="background: #e3f2fd; color: #1976d2;">
+              <el-icon :size="24"><ChatDotRound /></el-icon>
+            </div>
+            <div class="stat-info">
+              <h4>{{ stats.unreadMessages || 0 }}</h4>
+              <p>未读消息</p>
             </div>
           </div>
         </el-card>
@@ -104,7 +130,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import {
-  User, Document, DataAnalysis, List, Bell, EditPen, Warning
+  User, Document, DataAnalysis, List, Bell, EditPen, Warning, House, ChatDotRound
 } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import { analysisApi, dataCollectionApi } from '../api'
@@ -125,6 +151,7 @@ const quickActions = [
   { label: '干预计划', desc: '制定个性化干预方案', icon: List, color: '#f57c00', path: '/intervention-plan' },
   { label: '风险评估', desc: '查看风险预警信息', icon: Warning, color: '#d32f2f', path: '/risk-warning' },
   { label: '数据采集', desc: '智能评估/问询/影像', icon: DataAnalysis, color: '#7b1fa2', path: '/data-list' },
+  { label: '家庭健康助手', desc: '远程随访与健康管理', icon: House, color: '#388e3c', path: '/homecare/visit-plan' },
   { label: '系统管理', desc: '用户与字典管理', icon: User, color: '#1976d2', path: '/system' }
 ]
 

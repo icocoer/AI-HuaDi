@@ -195,4 +195,29 @@ export const systemApi = {
   statistics() { return request.get('/system/statistics') }
 }
 
+// ========== 家庭健康助手 API ==========
+export const homecareApi = {
+  // 随访计划
+  visitPlanList(params) { return request.get('/homecare/visit-plan/list', { params }) },
+  visitPlanById(id) { return request.get(`/homecare/visit-plan/${id}`) },
+  addVisitPlan(data) { return request.post('/homecare/visit-plan/add', data) },
+  updateVisitPlan(data) { return request.put('/homecare/visit-plan/update', data) },
+  deleteVisitPlan(id) { return request.delete(`/homecare/visit-plan/delete/${id}`) },
+
+  // 随访记录
+  visitRecordList(params) { return request.get('/homecare/visit-record/list', { params }) },
+  addVisitRecord(data) { return request.post('/homecare/visit-record/add', data) },
+
+  // 健康预警
+  healthAlertList(params) { return request.get('/homecare/health-alert/list', { params }) },
+  unreadAlertCount() { return request.get('/homecare/health-alert/unread-count') },
+  markAlertRead(id) { return request.put(`/homecare/health-alert/${id}/read`) },
+
+  // 站内消息
+  messageList(params) { return request.get('/homecare/message/list', { params }) },
+  unreadMessageCount(receiverId) { return request.get('/homecare/message/unread-count', { params: { receiverId } }) },
+  markMessageRead(id) { return request.put(`/homecare/message/${id}/read`) },
+  sendMessage(data) { return request.post('/homecare/message/send', data) }
+}
+
 export default request

@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS intervention_plan (
     start_date DATE COMMENT '开始日期',
     end_date DATE COMMENT '结束日期',
     responsible_doctor VARCHAR(50) COMMENT '负责人',
-    status INT DEFAULT 1 COMMENT '状态 1=待执行 2=执行中 3=已完成',
+    status VARCHAR(20) DEFAULT 'pending' COMMENT '状态 pending/in_progress/completed/cancelled',
     remark VARCHAR(500) COMMENT '备注',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -254,13 +254,88 @@ INSERT IGNORE INTO cognitive_assessment (id, elder_id, assessment_type, total_sc
 
 -- 干预计划
 INSERT IGNORE INTO intervention_plan (id, elder_id, plan_name, plan_type, risk_level, cognitive_training, lifestyle_intervention, rehabilitation_plan, goals, start_date, end_date, responsible_doctor, status, remark, create_time, update_time) VALUES
-(317569200195371008, 317569200069541888, '轻度认知障碍综合干预', 'cognitive', 'medium', '数字广度训练30min/天', '每周社区太极拳3次', '每周物理治疗1次', '6个月内MMSE提升至26分以上', '2026-03-01', '2026-09-01', '张医生', 2, '高血压合并轻度认知下降', NOW(), NOW()),
-(317569200203759616, 317569200073736192, '重度认知障碍干预方案', 'cognitive', 'high', '怀旧疗法每周3次', '低盐低脂冠心病饮食', '心功能康复训练每周2次', '延缓认知衰退速度', '2026-02-01', '2026-08-01', '李医生', 2, '冠心病合并认知下降', NOW(), NOW());
+(317569200195371008, 317569200069541888, '轻度认知障碍综合干预', 'cognitive', 'medium', '数字广度训练30min/天', '每周社区太极拳3次', '每周物理治疗1次', '6个月内MMSE提升至26分以上', '2026-03-01', '2026-09-01', '张医生', 'in_progress', '高血压合并轻度认知下降', NOW(), NOW()),
+(317569200203759616, 317569200073736192, '重度认知障碍干预方案', 'cognitive', 'high', '怀旧疗法每周3次', '低盐低脂冠心病饮食', '心功能康复训练每周2次', '延缓认知衰退速度', '2026-02-01', '2026-08-01', '李医生', 'in_progress', '冠心病合并认知下降', NOW(), NOW());
 
 -- 风险预警
 INSERT IGNORE INTO risk_warning (id, elder_id, elder_name, risk_level, warning_type, warning_msg, is_read, create_time) VALUES
 (317569200337977344, 317569200073736192, '李秀英', 'high', 'risk_alert', '李秀英最近一次MoCA评分降至18分，认知下降加速', 0, NOW()),
 (317569200358948864, 317569200069541888, '王建国', 'medium', 'risk_alert', '王建国认知评分从26分降至24分，血压持续偏高', 0, NOW());
+
+-- ============================================
+-- 10. 家庭健康智能助手模块
+-- ============================================
+
+-- 随访计划表
+CREATE TABLE IF NOT EXISTS homecare_visit_plan (
+    id BIGINT NOT NULL PRIMARY KEY,
+    elder_id BIGINT NOT NULL COMMENT '老人ID',
+    doctor_id BIGINT NOT NULL COMMENT '医生ID',
+    visit_type VARCHAR(20) DEFAULT 'home' COMMENT '随访类型 home/phone/video',
+    planned_date DATE COMMENT '计划随访日期',
+    status VARCHAR(20) DEFAULT 'pending' COMMENT '状态 pending/completed/cancelled',
+    remark VARCHAR(500) COMMENT '备注',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_elder_id (elder_id),
+    INDEX idx_doctor_id (doctor_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='随访计划表';
+
+-- 随访记录表
+CREATE TABLE IF NOT EXISTS homecare_visit_record (
+    id BIGINT NOT NULL PRIMARY KEY,
+    plan_id BIGINT COMMENT '计划ID',
+    elder_id BIGINT NOT NULL COMMENT '老人ID',
+    visit_date DATETIME COMMENT '随访日期',
+    visit_content TEXT COMMENT '随访内容',
+    health_status VARCHAR(50) COMMENT '健康状况',
+    recommendations TEXT COMMENT '建议',
+    next_plan_date DATE COMMENT '下次计划日期',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_elder_id (elder_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='随访记录表';
+
+-- 健康预警表
+CREATE TABLE IF NOT EXISTS homecare_health_alert (
+    id BIGINT NOT NULL PRIMARY KEY,
+    elder_id BIGINT NOT NULL COMMENT '老人ID',
+    alert_type VARCHAR(50) COMMENT '预警类型 blood_pressure/blood_sugar/heart_rate',
+    alert_level VARCHAR(20) COMMENT '预警级别 warning/danger',
+    alert_message TEXT COMMENT '预警信息',
+    is_read INT DEFAULT 0 COMMENT '是否已读',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_elder_id (elder_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='健康预警表';
+
+-- 站内消息表
+CREATE TABLE IF NOT EXISTS homecare_message (
+    id BIGINT NOT NULL PRIMARY KEY,
+    sender_id BIGINT NOT NULL COMMENT '发送者ID',
+    receiver_id BIGINT NOT NULL COMMENT '接收者ID',
+    message_type VARCHAR(20) DEFAULT 'text' COMMENT '消息类型 text/image/system',
+    content TEXT COMMENT '消息内容',
+    is_read INT DEFAULT 0 COMMENT '是否已读',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_sender_id (sender_id),
+    INDEX idx_receiver_id (receiver_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='站内消息表';
+
+-- 家庭健康助手种子数据
+INSERT IGNORE INTO homecare_visit_plan (id, elder_id, doctor_id, visit_type, planned_date, status, remark) VALUES
+(317569200500000001, 317569200069541888, 317569200000000001, 'home', '2026-07-15', 'pending', '高血压患者定期随访'),
+(317569200500000002, 317569200073736192, 317569200000000001, 'phone', '2026-07-10', 'pending', '冠心病患者电话随访'),
+(317569200500000003, 317569200086319104, 317569200000000002, 'home', '2026-06-20', 'completed', '帕金森患者居家随访');
+
+INSERT IGNORE INTO homecare_visit_record (id, plan_id, elder_id, visit_date, visit_content, health_status, recommendations, next_plan_date) VALUES
+(317569200510000001, 317569200500000003, 317569200086319104, '2026-06-20 10:00:00', '患者精神状态尚可，步态不稳，需继续康复训练', 'stable', '继续步态训练，注意防跌倒', '2026-07-20');
+
+INSERT IGNORE INTO homecare_health_alert (id, elder_id, alert_type, alert_level, alert_message, is_read) VALUES
+(317569200520000001, 317569200069541888, 'blood_pressure', 'warning', '血压偏高：142/88mmHg，建议调整降压药', 0),
+(317569200520000002, 317569200094707712, 'blood_pressure', 'danger', '血压持续偏高：155/95mmHg，需紧急关注', 0);
+
+INSERT IGNORE INTO homecare_message (id, sender_id, receiver_id, message_type, content, is_read) VALUES
+(317569200530000001, 317569200000000001, 317569200069541888, 'text', '王先生您好，您的血压监测数据显示偏高，请按时服药并注意饮食。', 0),
+(317569200530000002, 317569200069541888, 317569200000000001, 'text', '好的，张医生，我会注意的。', 1);
 
 -- 完成提示
 SELECT '数据库初始化完成！' AS message;

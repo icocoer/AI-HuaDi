@@ -9,7 +9,9 @@
       </div>
 
       <div class="search-bar">
-        <el-input v-model="searchElderId" placeholder="老人ID" clearable style="width: 140px" @clear="loadData" @keyup.enter="loadData" />
+        <el-select v-model="searchElderId" placeholder="选择老人" clearable filterable style="width: 200px" @clear="loadData" @change="loadData">
+          <el-option v-for="e in elderList" :key="e.id" :label="`${e.name}（${e.id}）`" :value="e.id" />
+        </el-select>
         <el-select v-model="searchStatus" placeholder="状态" clearable style="width: 140px; margin-left: 10px" @clear="loadData" @change="loadData">
           <el-option label="待执行" value="pending" /><el-option label="执行中" value="in_progress" /><el-option label="已完成" value="completed" />
         </el-select>
@@ -52,7 +54,11 @@
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="老人ID" prop="elderId"><el-input v-model.number="form.elderId" /></el-form-item>
+            <el-form-item label="老人" prop="elderId">
+              <el-select v-model="form.elderId" placeholder="选择老人" filterable style="width: 100%">
+                <el-option v-for="e in elderList" :key="e.id" :label="`${e.name}（${e.id}）`" :value="e.id" />
+              </el-select>
+            </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="计划名称" prop="planName"><el-input v-model="form.planName" /></el-form-item>
@@ -84,7 +90,11 @@
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="责任医生" prop="responsibleDoctor"><el-input v-model="form.responsibleDoctor" /></el-form-item>
+            <el-form-item label="责任医生" prop="responsibleDoctor">
+              <el-select v-model="form.responsibleDoctor" placeholder="选择医生" filterable :disabled="user.role !== 'admin'" style="width: 100%">
+                <el-option v-for="u in doctorList" :key="u.id" :label="`${u.realName || u.username}（${u.role}）`" :value="u.realName || u.username" />
+              </el-select>
+            </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="状态" prop="status">
@@ -119,10 +129,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { interventionPlanApi } from '../api'
+import { interventionPlanApi, elderApi, userApi } from '../api'
 import { exportToExcel } from '../utils/export'
 
+const user = JSON.parse(localStorage.getItem('user') || '{}')
+
 const tableData = ref([])
+const elderList = ref([])
+const doctorList = ref([])
 const loading = ref(false)
 const submitting = ref(false)
 const dialogVisible = ref(false)
@@ -142,7 +156,7 @@ const form = ref({
 })
 
 const rules = {
-  elderId: [{ required: true, message: '请输入老人ID', trigger: 'blur' }],
+  elderId: [{ required: true, message: '请选择老人', trigger: 'change' }],
   planName: [{ required: true, message: '请输入计划名称', trigger: 'blur' }]
 }
 
@@ -182,7 +196,15 @@ const handleExport = () => {
   ], '干预计划列表')
 }
 
-const openAdd = () => { isEdit.value = false; editId.value = null; dialogVisible.value = true }
+const openAdd = () => {
+  isEdit.value = false; editId.value = null
+  resetForm()
+  // 医生角色默认责任医生为自己
+  if (user.role !== 'admin') {
+    form.value.responsibleDoctor = user.realName || user.username
+  }
+  dialogVisible.value = true
+}
 
 const openEdit = (row) => {
   isEdit.value = true; editId.value = row.id
@@ -216,7 +238,25 @@ const handleDelete = async (row) => {
   try { await interventionPlanApi.delete(row.id); ElMessage.success('删除成功'); loadData() } catch { }
 }
 
-onMounted(loadData)
+const loadElders = async () => {
+  try {
+    const res = await elderApi.list({ pageNum: 1, pageSize: 1000 })
+    elderList.value = res.data.list || []
+  } catch { elderList.value = [] }
+}
+
+const loadDoctors = async () => {
+  try {
+    const res = await userApi.list({ pageNum: 1, pageSize: 1000 })
+    doctorList.value = (res.data.list || []).filter(u => u.role === 'admin' || u.role === 'doctor')
+  } catch { doctorList.value = [] }
+}
+
+onMounted(() => {
+  loadData()
+  loadElders()
+  loadDoctors()
+})
 </script>
 
 <style scoped>

@@ -9,6 +9,7 @@ import com.example.work_program.modules.risk.mapper.RiskWarningMapper;
 import com.example.work_program.modules.intervention.mapper.InterventionPlanMapper;
 import com.example.work_program.modules.intervention.mapper.InterventionExecutionMapper;
 import com.example.work_program.modules.datacollection.mapper.HealthDataCollectionMapper;
+import com.example.work_program.modules.homecare.mapper.*;
 import com.example.work_program.modules.analysis.service.AnalysisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,12 @@ public class AnalysisServiceImpl implements AnalysisService {
     private HealthDataCollectionMapper healthDataCollectionMapper;
     @Autowired
     private RiskWarningMapper riskWarningMapper;
+    @Autowired
+    private VisitPlanMapper visitPlanMapper;
+    @Autowired
+    private HealthAlertMapper healthAlertMapper;
+    @Autowired
+    private MessageMapper messageMapper;
 
     @Override
     public AnalysisStatisticsDTO getDashboardStatistics() {
@@ -62,6 +69,11 @@ public class AnalysisServiceImpl implements AnalysisService {
         dto.setExecutionCompletionRate(totalPlans > 0 ? (double) inProgress / totalPlans : 0.0);
 
         dto.setUnreadWarnings(riskWarningMapper.countUnread());
+
+        // 家庭健康助手统计
+        dto.setTotalVisitPlans(visitPlanMapper.count(null, null, null));
+        dto.setUnreadAlerts(healthAlertMapper.countUnread());
+        dto.setUnreadMessages(messageMapper.countUnread(null));
 
         return dto;
     }

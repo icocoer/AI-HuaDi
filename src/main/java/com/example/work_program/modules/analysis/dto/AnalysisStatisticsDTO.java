@@ -15,4 +15,7 @@ public class AnalysisStatisticsDTO {
     private Map<String, Long> planStatusDistribution;
     private Double executionCompletionRate;
     private Long unreadWarnings;
+    private Long totalVisitPlans;
+    private Long unreadAlerts;
+    private Long unreadMessages;
 }

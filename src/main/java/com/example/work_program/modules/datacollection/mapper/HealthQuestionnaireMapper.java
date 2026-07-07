@@ -19,8 +19,14 @@ public interface HealthQuestionnaireMapper {
     @Select("<script>SELECT * FROM health_questionnaire <where>" +
             "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
             "<if test='questionnaireType != null and questionnaireType != \"\"'>AND questionnaire_type = #{questionnaireType}</if>" +
-            "</where> ORDER BY survey_time DESC</script>")
-    List<HealthQuestionnaire> findAll(@Param("elderId") Long elderId, @Param("questionnaireType") String questionnaireType);
+            "</where> ORDER BY survey_time DESC LIMIT #{offset}, #{limit}</script>")
+    List<HealthQuestionnaire> findAll(@Param("elderId") Long elderId, @Param("questionnaireType") String questionnaireType, @Param("offset") int offset, @Param("limit") int limit);
+
+    @Select("<script>SELECT COUNT(*) FROM health_questionnaire <where>" +
+            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
+            "<if test='questionnaireType != null and questionnaireType != \"\"'>AND questionnaire_type = #{questionnaireType}</if>" +
+            "</where></script>")
+    Long count(@Param("elderId") Long elderId, @Param("questionnaireType") String questionnaireType);
 
     @Insert("INSERT INTO health_questionnaire (id, collection_id, elder_id, questionnaire_type, questions, " +
             "answers, risk_factors, summary, surveyor, survey_time, create_time) " +

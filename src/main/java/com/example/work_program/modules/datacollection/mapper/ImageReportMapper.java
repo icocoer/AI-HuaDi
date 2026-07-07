@@ -19,8 +19,14 @@ public interface ImageReportMapper {
     @Select("<script>SELECT * FROM image_report <where>" +
             "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
             "<if test='imageType != null and imageType != \"\"'>AND image_type = #{imageType}</if>" +
-            "</where> ORDER BY upload_time DESC</script>")
-    List<ImageReport> findAll(@Param("elderId") Long elderId, @Param("imageType") String imageType);
+            "</where> ORDER BY upload_time DESC LIMIT #{offset}, #{limit}</script>")
+    List<ImageReport> findAll(@Param("elderId") Long elderId, @Param("imageType") String imageType, @Param("offset") int offset, @Param("limit") int limit);
+
+    @Select("<script>SELECT COUNT(*) FROM image_report <where>" +
+            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
+            "<if test='imageType != null and imageType != \"\"'>AND image_type = #{imageType}</if>" +
+            "</where></script>")
+    Long count(@Param("elderId") Long elderId, @Param("imageType") String imageType);
 
     @Insert("INSERT INTO image_report (id, collection_id, elder_id, image_type, image_url, thumb_url, " +
             "report_no, institution, doctor_name, diagnosis_date, diagnosis_result, " +
