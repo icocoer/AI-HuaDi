@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>实习报告图表 - 共8张</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Microsoft YaHei", "SimHei", sans-serif; background: #f0f2f5; padding: 20px; }
+  h1 { text-align: center; color: #1a1a2e; margin-bottom: 10px; font-size: 24px; }
+  .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 14px; }
+  .card {
+    background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    margin-bottom: 24px; padding: 24px; page-break-inside: avoid;
+  }
+  .card h2 { font-size: 18px; color: #16213e; border-left: 4px solid #0f3460; padding-left: 12px; margin-bottom: 16px; }
+  .card .ref { font-size: 12px; color: #999; margin-bottom: 12px; }
+  .mermaid { display: flex; justify-content: center; }
+  .note { font-size: 13px; color: #888; margin-top: 8px; text-align: center; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .card { box-shadow: none; border: 1px solid #eee; margin-bottom: 12px; padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>AI+老年认知衰弱分级干预与智能管理系统</h1>
+<p class="subtitle">企业实习中期报告 配套图表（共8张）｜ 可直接截图插入 Word 文档</p>
+
+<!-- 图1: 系统总体架构 -->
+<div class="card">
+  <h2>图1：系统总体架构图</h2>
+  <p class="ref">对应模板 3.3 节「系统总体架构图」</p>
+  <div class="mermaid">
+graph TB
+    subgraph 用户层
+        A1[社区医护人员]
+        A2[养老机构管理员]
+        A3[老年人及家属]
+        A4[系统管理员]
+    end
+
+    subgraph 接入层
+        B1[Nginx 反向代理<br/>Vue3 前端静态资源]
+    end
+
+    subgraph 应用层
+        C1[数据影像<br/>采集系统]
+        C2[家庭健康<br/>智能助手]
+        C3[认知衰弱<br/>风险评估与预警]
+        C4[健康认知与<br/>干预管理]
+        C5[效果分析<br/>决策支持]
+    end
+
+    subgraph 公共服务层
+        D1[权限管理]
+        D2[统一响应 Result]
+        D3[知识库]
+        D4[基础数据字典]
+    end
+
+    subgraph 数据层
+        E1[(MySQL 8.0<br/>主数据库)]
+        E2[文件存储<br/>服务器]
+    end
+
+    A1 & A2 & A3 & A4 --> B1
+    B1 --> C1 & C2 & C3 & C4 & C5
+    C1 & C2 & C3 & C4 & C5 --> D1 & D2 & D3 & D4
+    C1 & C2 & C3 & C4 & C5 --> E1
+    C1 --> E2
+  </div>
+  <p class="note">系统采用前后端分离 + 五大子系统模块化架构</p>
+</div>
+
+<!-- 图2: 数据采集子系统功能架构 -->
+<div class="card">
+  <h2>图2：数据采集子系统功能架构图</h2>
+  <p class="ref">对应模板 3.3 节「数据采集子系统功能架构图」</p>
+  <div class="mermaid">
+graph TB
+    subgraph 数据影像采集子系统
+        direction TB
+
+        subgraph 智能评估模块
+            M1[评估记录管理<br/>增删改查]
+            M2[量表模板管理<br/>MMSE/MoCA等]
+            M3[自动评分计算]
+            M4[评估结果汇总]
+        end
+
+        subgraph 健康问询模块
+            M5[问询记录管理<br/>增删改查]
+            M6[问询模板管理]
+            M7[历史记录对比]
+            M8[问询结果汇总]
+        end
+
+        subgraph 影像报告模块
+            M9[报告记录管理<br/>增删改查]
+            M10[影像文件上传/下载]
+            M11[报告全文检索]
+            M12[报告统计分析]
+        end
+
+        subgraph 数据汇总与统计模块
+            M13[按数据来源统计]
+            M14[按时间周期统计]
+            M15[按采集人统计]
+            M16[按老人汇总]
+        end
+    end
+
+    subgraph 数据出口
+        N1[风险评估子系统]
+        N2[干预管理子系统]
+        N3[效果分析子系统]
+    end
+
+    M1 --> M3 --> M4
+    M5 --> M7 --> M8
+    M9 --> M10
+    M4 & M8 & M12 --> M13 & M14 & M15 & M16
+    M13 & M14 & M15 & M16 --> N1 & N2 & N3
+  </div>
+  <p class="note">本人负责：4个模块 × 16个功能点，总计约30个RESTful API接口</p>
+</div>
+
+<!-- 图3: 三层架构设计 -->
+<div class="card">
+  <h2>图3：Controller-Service-Mapper 三层架构图</h2>
+  <p class="ref">对应模板 3.2 节「分层架构设计」</p>
+  <div class="mermaid">
+graph LR
+    subgraph 前端
+        FE[Vue3 + Element Plus]
+    end
+
+    subgraph Controller层
+        C1[UserController]
+        C2[DataCollectionController]
+        C3[ElderHealthRecordController]
+        C4[CognitiveAssessmentController]
+    end
+
+    subgraph 拦截器层
+        INT[JwtInterceptor<br/>Token校验 + 角色鉴权]
+    end
+
+    subgraph Service层
+        S1[UserService]
+        S2[HealthDataCollectionService]
+        S3[ElderHealthRecordService]
+        S4[CognitiveAssessmentService]
+    end
+
+    subgraph Mapper层
+        MA1[UserMapper]
+        MA2[HealthDataCollectionMapper]
+        MA3[ElderHealthRecordMapper]
+        MA4[CognitiveAssessmentMapper]
+    end
+
+    subgraph 数据库
+        DB[(MySQL 8.0)]
+    end
+
+    FE -->|HTTP Request| C1 & C2 & C3 & C4
+    C1 & C2 & C3 & C4 --> INT
+    INT --> S1 & S2 & S3 & S4
+    S1 --> MA1
+    S2 --> MA2
+    S3 --> MA3
+    S4 --> MA4
+    MA1 & MA2 & MA3 & MA4 --> DB
+
+    C1 -.->|依赖注入| S1
+    S1 -.->|依赖注入| MA1
+  </div>
+  <p class="note">实线表示数据流，虚线表示依赖注入关系；各层职责明确，上层依赖下层接口</p>
+</div>
+
+<!-- 图4: JWT认证流程 -->
+<div class="card">
+  <h2>图4：JWT 用户认证与鉴权流程</h2>
+  <p class="ref">对应模板 3.3 节「JWT认证流程实现」</p>
+  <div class="mermaid">
+sequenceDiagram
+    participant 客户端 as 客户端 (Vue3)
+    participant 拦截器 as JwtInterceptor
+    participant Controller as Controller层
+    participant Service as Service层
+    participant DB as MySQL数据库
+
+    Note over 客户端,DB: 第一步：用户登录
+    客户端->>Controller: POST /api/user/login<br/>{username, password}
+    Controller->>Service: 验证用户名密码
+    Service->>DB: 查询用户记录
+    DB-->>Service: 返回用户信息
+    Service-->>Controller: 验证通过
+    Controller->>Controller: 生成JWT Token<br/>含 userId/username/role
+    Controller-->>客户端: 返回 Token + 用户信息
+
+    Note over 客户端,DB: 第二步：后续请求认证
+    客户端->>拦截器: GET /api/data/list<br/>Authorization: Bearer <token>
+    拦截器->>拦截器: 读取 @LoginRequired 注解
+    拦截器->>拦截器: 解析Token → 验证签名
+    alt Token 无效或过期
+        拦截器-->>客户端: 401 未登录或Token无效
+    else Token 有效
+        拦截器->>拦截器: 检查角色权限
+        alt 角色不满足
+            拦截器-->>客户端: 403 权限不足
+        else 角色满足
+            拦截器->>Controller: 放行 + 写入用户属性
+            Controller->>Service: 执行业务逻辑
+            Service->>DB: 数据库操作
+            DB-->>Service: 返回数据
+            Service-->>Controller: 返回结果
+            Controller-->>客户端: 200 返回业务数据
+        end
+    end
+  </div>
+  <p class="note">两步机制：先登录获取Token，后续请求携带Token完成认证鉴权</p>
+</div>
+
+<!-- 图5: 网络拓扑 -->
+<div class="card">
+  <h2>图5：系统部署网络拓扑图</h2>
+  <p class="ref">对应模板 3.1 节「网络拓扑结构」</p>
+  <div class="mermaid">
+graph TB
+    subgraph 客户端
+        U1[社区医生工作站<br/>Windows 10/11]
+        U2[护士移动终端<br/>平板/手机]
+        U3[管理员后台<br/>Windows]
+    end
+
+    subgraph 安全边界
+        FW[防火墙]
+    end
+
+    subgraph 应用服务器区
+        NX[Nginx 服务器<br/>端口: 80/443<br/>Vue3静态资源 + 反向代理]
+        APP1[Spring Boot 应用服务器-1<br/>端口: 8080<br/>Tomcat]
+        APP2[Spring Boot 应用服务器-2<br/>端口: 8080<br/>Tomcat 备用]
+    end
+
+    subgraph 数据存储区
+        DBS[(MySQL 主数据库<br/>端口: 3306<br/>主从复制)]
+        FS[文件存储服务器<br/>影像/附件<br/>端口: 9000]
+    end
+
+    U1 & U2 & U3 -->|HTTPS| FW
+    FW --> NX
+    NX -->|反向代理| APP1 & APP2
+    APP1 & APP2 --> DBS
+    APP1 & APP2 --> FS
+
+    NX -.-|内网| APP1
+    APP1 -.-|内网| DBS
+  </div>
+  <p class="note">前后端分离部署，Nginx 做反向代理和静态资源服务；数据库独立部署，支持主从复制</p>
+</div>
+
+<!-- 图6: 数据库E-R图 -->
+<div class="card">
+  <h2>图6：数据库 E-R 关系图（核心表）</h2>
+  <p class="ref">对应模板 3.2 节「数据库设计」</p>
+  <div class="mermaid">
+erDiagram
+    sys_user ||--o{ health_data_collection : "collects"
+    sys_user ||--o{ cognitive_assessment : "assesses"
+    sys_user ||--o{ intervention_plan : "creates"
+    sys_user ||--o{ intervention_execution : "executes"
+
+    elder_health_record ||--o{ health_data_collection : "has"
+    elder_health_record ||--o{ cognitive_assessment : "undergoes"
+    elder_health_record ||--o{ intervention_plan : "receives"
+
+    intervention_plan ||--o{ intervention_execution : "tracked_by"
+
+    health_data_collection ||--o| smart_assessment : "extends"
+    health_data_collection ||--o| health_questionnaire : "extends"
+    health_data_collection ||--o| image_report : "extends"
+
+    sys_user {
+        bigint id PK
+        varchar username
+        varchar password
+        varchar real_name
+        varchar role
+        varchar phone
+        datetime create_time
+    }
+
+    elder_health_record {
+        bigint id PK
+        varchar name
+        varchar gender
+        date birth_date
+        varchar id_card
+        varchar phone
+        varchar address
+        varchar emergency_contact
+        text medical_history
+        varchar risk_level
+        datetime create_time
+    }
+
+    health_data_collection {
+        bigint id PK
+        bigint elder_id FK
+        varchar data_source
+        varchar data_type
+        text data_content
+        varchar attachment_url
+        date collection_date
+        varchar collector
+        varchar remark
+        datetime create_time
+    }
+
+    cognitive_assessment {
+        bigint id PK
+        bigint elder_id FK
+        varchar scale_type
+        int orientation_score
+        int memory_score
+        int attention_score
+        int recall_score
+        int language_score
+        int total_score
+        varchar risk_level
+        date assessment_date
+        varchar assessor
+    }
+
+    intervention_plan {
+        bigint id PK
+        bigint elder_id FK
+        varchar plan_type
+        varchar plan_name
+        text plan_content
+        date start_date
+        date end_date
+        varchar status
+        varchar creator
+    }
+
+    intervention_execution {
+        bigint id PK
+        bigint plan_id FK
+        date execution_date
+        varchar completion_status
+        text feedback
+        varchar executor
+    }
+  </div>
+  <p class="note">核心表6张，数据采集模块通过 elder_id 与健康档案关联，通过 collector/assessor 与用户表关联</p>
+</div>
+
+<!-- 图7: RUP阶段甘特图 -->
+<div class="card">
+  <h2>图7：RUP 开发阶段甘特图</h2>
+  <p class="ref">对应模板 1.1 节 — RUP 四个阶段的整体进度</p>
+  <div class="mermaid">
+gantt
+    title AI+老年认知衰弱分级干预与智能管理系统 开发计划
+    dateFormat  YYYY-MM-DD
+    axisFormat  %m/%d
+
+    section 先启阶段
+    需求调研与分析           :a1, 2026-02-17, 4d
+    系统用例建模             :a2, after a1, 3d
+    项目计划制定             :a3, after a1, 3d
+    开发环境搭建             :a4, 2026-02-17, 3d
+    先启里程碑评审           :milestone, a5, after a3, 0d
+
+    section 精化阶段
+    数据库设计与建模         :b1, 2026-03-03, 5d
+    系统架构设计             :b2, after b1, 5d
+    核心模块详细设计         :b3, after b1, 5d
+    UI原型设计与评审         :b4, after b2, 5d
+    测试计划制定             :b5, after b2, 3d
+    精化里程碑评审           :milestone, b6, after b4, 0d
+
+    section 构建阶段
+    公共模块开发             :c1, 2026-03-24, 5d
+    数据采集模块开发 ★       :crit, c2, 2026-03-24, 10d
+    其他子系统开发           :c3, 2026-03-24, 15d
+    前后端联调               :c4, after c2, 5d
+    集成测试                 :c5, after c4, 5d
+    系统测试与缺陷修复       :c6, after c5, 5d
+    构建里程碑评审           :milestone, c7, after c6, 0d
+
+    section 产品化阶段
+    系统部署                 :d1, 2026-04-21, 3d
+    文档完善                 :d2, 2026-04-21, 5d
+    项目答辩准备             :d3, after d1, 5d
+    产品化里程碑评审         :milestone, d4, after d3, 0d
+  </div>
+  <p class="note">★ 标记为本人的核心工作；总工期10周，当前进行至第6周（构建阶段前期）</p>
+</div>
+
+<!-- 图8: 数据采集三大渠道 -->
+<div class="card">
+  <h2>图8：数据采集三大渠道与数据流转图</h2>
+  <p class="ref">对应模板 2 节及 3.3 节 — 数据采集渠道示意</p>
+  <div class="mermaid">
+flowchart LR
+    subgraph 采集渠道
+        direction TB
+        CH1[智能评估<br/>━━━━━<br/>MMSE量表<br/>MoCA量表<br/>自动评分]
+        CH2[健康问询<br/>━━━━━<br/>结构化问询<br/>既往病史<br/>生活方式]
+        CH3[影像报告<br/>━━━━━<br/>CT影像<br/>MRI影像<br/>诊断报告]
+    end
+
+    subgraph 数据采集模块
+        DC[HealthDataCollection<br/>统一数据采集表<br/>━━━━━<br/>elderId 关联<br/>dataSource 标记来源<br/>dataType 标记类型<br/>dataContent 存储内容]
+    end
+
+    subgraph 下游消费
+        direction TB
+        OUT1[风险评估子系统<br/>→ 风险等级计算]
+        OUT2[干预管理子系统<br/>→ 个性化方案生成]
+        OUT3[效果分析子系统<br/>→ 趋势分析与报表]
+    end
+
+    CH1 -->|source: smart_assessment| DC
+    CH2 -->|source: questionnaire| DC
+    CH3 -->|source: image_report| DC
+    DC --> OUT1
+    DC --> OUT2
+    DC --> OUT3
+
+    DC -.-|质量评分过滤| OUT1
+  </div>
+  <p class="note">三大采集渠道统一汇总至 HealthDataCollection 主表，经质量评分过滤后供下游子系统消费</p>
+</div>
+
+<p class="subtitle" style="margin-top: 30px;">
+  共 8 张图表 &nbsp;|&nbsp;
+  <b>操作提示</b>：浏览器中打开此文件 → 右键截图/打印为PDF → 插入 Word 文档对应位置
+</p>
+
+</body>
+</html>
