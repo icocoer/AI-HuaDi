@@ -5,11 +5,9 @@ import com.example.work_program.annotation.LogOperation;
 import com.example.work_program.common.PageResult;
 import com.example.work_program.common.Result;
 import com.example.work_program.modules.datacollection.dto.DataCollectionStatisticsDTO;
-import com.example.work_program.modules.elder.entity.ElderHealthRecord;
 import com.example.work_program.modules.datacollection.entity.HealthDataCollection;
 import com.example.work_program.modules.datacollection.enums.DataSourceEnum;
 import com.example.work_program.modules.datacollection.enums.DataTypeEnum;
-import com.example.work_program.modules.elder.service.ElderHealthRecordService;
 import com.example.work_program.modules.datacollection.service.HealthDataCollectionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.validation.Valid;
@@ -28,9 +26,6 @@ public class DataCollectionController {
 
     @Autowired
     private HealthDataCollectionService healthDataCollectionService;
-
-    @Autowired
-    private ElderHealthRecordService elderHealthRecordService;
 
     // ==================== 数据采集主记录接口 ====================
 
@@ -92,15 +87,7 @@ public class DataCollectionController {
      */
     @GetMapping("/statistics")
     public Result<DataCollectionStatisticsDTO> getStatistics(@RequestParam(required = false) Long elderId) {
-        DataCollectionStatisticsDTO stats = new DataCollectionStatisticsDTO();
-        List<HealthDataCollection> allData = healthDataCollectionService.findAll(elderId, null, 1, 10000).getList();
-
-        stats.setTotalCount((long) allData.size());
-        stats.setSmartCount(allData.stream().filter(d -> "smart".equals(d.getDataSource())).count());
-        stats.setQuestionnaireCount(allData.stream().filter(d -> "questionnaire".equals(d.getDataSource())).count());
-        stats.setImageCount(allData.stream().filter(d -> "image".equals(d.getDataSource())).count());
-
-        return Result.success(stats);
+        return Result.success(healthDataCollectionService.getStatistics(elderId));
     }
 
     // ==================== 字典接口 ====================

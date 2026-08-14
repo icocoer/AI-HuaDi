@@ -30,6 +30,7 @@ public class User {
 
     private Integer status;
     private String role;
+    private Long elderId; // 关联老人档案ID（角色为patient时使用）
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

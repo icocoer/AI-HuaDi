@@ -19,7 +19,7 @@
       </div>
 
       <el-table :data="tableData" border stripe v-loading="loading" style="margin-top: 15px">
-        <el-table-column prop="id" label="ID" width="60" />
+        <el-table-column prop="id" label="ID" width="180" />
         <el-table-column prop="name" label="姓名" width="100" />
         <el-table-column prop="gender" label="性别" width="80">
           <template #default="{ row }">{{ row.gender === 'M' ? '男' : '女' }}</template>
@@ -36,10 +36,11 @@
         <el-table-column prop="address" label="地址" min-width="180" show-overflow-tooltip />
         <el-table-column prop="emergencyContact" label="紧急联系人" width="100" />
         <el-table-column prop="emergencyPhone" label="紧急电话" width="130" />
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
             <el-button size="small" type="primary" @click="viewProfile(row)">详情</el-button>
             <el-button size="small" @click="openEdit(row)">编辑</el-button>
+            <el-button size="small" type="success" @click="openCreateAccount(row)" :disabled="row.hasAccount">创建账户</el-button>
             <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -125,6 +126,28 @@
         </el-table>
       </div>
     </el-dialog>
+
+    <!-- 创建账户弹窗 -->
+    <el-dialog title="创建患者账户" v-model="accountDialogVisible" width="450px" @close="resetAccountForm">
+      <el-form :model="accountForm" :rules="accountRules" ref="accountFormRef" label-width="100px">
+        <el-form-item label="关联老人">
+          <el-input :value="accountForm.elderName" disabled />
+        </el-form-item>
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="accountForm.username" placeholder="用于登录" />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="accountForm.password" type="password" placeholder="初始密码" show-password />
+        </el-form-item>
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="accountForm.phone" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="accountDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleCreateAccount" :loading="accountSubmitting">创建</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -132,7 +155,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { elderApi } from '../api'
+import { elderApi, userApi } from '../api'
 import { exportToExcel } from '../utils/export'
 
 const tableData = ref([])
@@ -140,9 +163,12 @@ const loading = ref(false)
 const submitting = ref(false)
 const dialogVisible = ref(false)
 const profileVisible = ref(false)
+const accountDialogVisible = ref(false)
+const accountSubmitting = ref(false)
 const isEdit = ref(false)
 const editId = ref(null)
 const formRef = ref(null)
+const accountFormRef = ref(null)
 const searchName = ref('')
 const searchRiskLevel = ref('')
 const profile = ref({})
@@ -230,7 +256,78 @@ const viewProfile = async (row) => {
   } catch { }
 }
 
-onMounted(loadData)
+// 创建账户相关
+const accountForm = ref({
+  elderId: null,
+  elderName: '',
+  username: '',
+  password: '',
+  phone: ''
+})
+
+const accountRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 2, max: 50, message: '长度2-50位', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 100, message: '长度6-100位', trigger: 'blur' }
+  ]
+}
+
+const openCreateAccount = (row) => {
+  accountForm.value = {
+    elderId: row.id,
+    elderName: row.name,
+    username: '',
+    password: '',
+    phone: row.phone || ''
+  }
+  accountDialogVisible.value = true
+}
+
+const resetAccountForm = () => {
+  accountForm.value = { elderId: null, elderName: '', username: '', password: '', phone: '' }
+  accountFormRef.value?.resetFields()
+}
+
+const handleCreateAccount = async () => {
+  const valid = await accountFormRef.value.validate().catch(() => false)
+  if (!valid) return
+  accountSubmitting.value = true
+  try {
+    await userApi.add({
+      username: accountForm.value.username,
+      password: accountForm.value.password,
+      realName: accountForm.value.elderName,
+      phone: accountForm.value.phone,
+      role: 'patient',
+      elderId: accountForm.value.elderId,
+      status: 1
+    })
+    ElMessage.success('账户创建成功')
+    accountDialogVisible.value = false
+    loadData()
+  } catch { } finally { accountSubmitting.value = false }
+}
+
+// 检查老人是否已有账户
+const checkAccountStatus = async () => {
+  try {
+    const res = await userApi.list({ pageNum: 1, pageSize: 1000 })
+    const users = res.data.list || []
+    const patientElderIds = new Set(users.filter(u => u.role === 'patient' && u.elderId).map(u => u.elderId))
+    tableData.value.forEach(row => {
+      row.hasAccount = patientElderIds.has(row.id)
+    })
+  } catch { }
+}
+
+onMounted(async () => {
+  await loadData()
+  checkAccountStatus()
+})
 </script>
 
 <style scoped>

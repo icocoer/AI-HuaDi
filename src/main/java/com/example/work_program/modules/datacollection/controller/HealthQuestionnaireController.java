@@ -55,7 +55,7 @@ public class HealthQuestionnaireController {
      * 添加健康问询记录
      */
     @PostMapping("/add")
-    @LoginRequired(roles = {"admin", "doctor", "nurse"})
+    @LoginRequired(roles = {"admin", "doctor", "nurse", "patient"})
     @LogOperation("添加问询记录")
     public Result<Void> add(@Valid @RequestBody HealthQuestionnaire questionnaire) {
         healthQuestionnaireService.add(questionnaire);

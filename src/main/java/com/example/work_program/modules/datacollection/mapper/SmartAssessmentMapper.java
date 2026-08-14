@@ -17,14 +17,14 @@ public interface SmartAssessmentMapper {
     List<SmartAssessment> findByCollectionId(@Param("collectionId") Long collectionId);
 
     @Select("<script>SELECT * FROM smart_assessment <where>" +
-            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
-            "<if test='assessmentType != null and assessmentType != \"\"'>AND assessment_type = #{assessmentType}</if>" +
+            "<if test='elderId != null'> AND elder_id = #{elderId}</if>" +
+            "<if test='assessmentType != null and assessmentType != \"\"'> AND assessment_type = #{assessmentType}</if>" +
             "</where> ORDER BY assessment_time DESC LIMIT #{offset}, #{limit}</script>")
     List<SmartAssessment> findAll(@Param("elderId") Long elderId, @Param("assessmentType") String assessmentType, @Param("offset") int offset, @Param("limit") int limit);
 
     @Select("<script>SELECT COUNT(*) FROM smart_assessment <where>" +
-            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
-            "<if test='assessmentType != null and assessmentType != \"\"'>AND assessment_type = #{assessmentType}</if>" +
+            "<if test='elderId != null'> AND elder_id = #{elderId}</if>" +
+            "<if test='assessmentType != null and assessmentType != \"\"'> AND assessment_type = #{assessmentType}</if>" +
             "</where></script>")
     Long count(@Param("elderId") Long elderId, @Param("assessmentType") String assessmentType);
 

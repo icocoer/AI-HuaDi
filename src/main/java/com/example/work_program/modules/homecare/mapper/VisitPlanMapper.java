@@ -7,17 +7,17 @@ import java.util.List;
 @Mapper
 public interface VisitPlanMapper {
     @Select("<script>SELECT * FROM homecare_visit_plan <where>" +
-            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
-            "<if test='doctorId != null'>AND doctor_id = #{doctorId}</if>" +
-            "<if test='status != null and status != \"\"'>AND status = #{status}</if>" +
+            "<if test='elderId != null'> AND elder_id = #{elderId}</if>" +
+            "<if test='doctorId != null'> AND doctor_id = #{doctorId}</if>" +
+            "<if test='status != null and status != \"\"'> AND status = #{status}</if>" +
             "</where> ORDER BY planned_date DESC LIMIT #{offset}, #{limit}</script>")
     List<VisitPlan> findAll(@Param("elderId") Long elderId, @Param("doctorId") Long doctorId,
                            @Param("status") String status, @Param("offset") int offset, @Param("limit") int limit);
 
     @Select("<script>SELECT COUNT(*) FROM homecare_visit_plan <where>" +
-            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
-            "<if test='doctorId != null'>AND doctor_id = #{doctorId}</if>" +
-            "<if test='status != null and status != \"\"'>AND status = #{status}</if>" +
+            "<if test='elderId != null'> AND elder_id = #{elderId}</if>" +
+            "<if test='doctorId != null'> AND doctor_id = #{doctorId}</if>" +
+            "<if test='status != null and status != \"\"'> AND status = #{status}</if>" +
             "</where></script>")
     Long count(@Param("elderId") Long elderId, @Param("doctorId") Long doctorId, @Param("status") String status);
 

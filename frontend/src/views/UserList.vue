@@ -15,15 +15,15 @@
       </div>
 
       <el-table :data="tableData" border stripe v-loading="loading" style="margin-top: 15px">
-        <el-table-column prop="id" label="ID" width="60" />
+        <el-table-column prop="id" label="ID" width="180" />
         <el-table-column prop="username" label="用户名" width="120" />
         <el-table-column prop="realName" label="真实姓名" width="120" />
         <el-table-column prop="phone" label="手机号" width="130" />
         <el-table-column prop="email" label="邮箱" min-width="180" />
         <el-table-column prop="role" label="角色" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.role === 'admin' ? 'danger' : row.role === 'doctor' ? 'warning' : 'info'" size="small">
-              {{ row.role }}
+            <el-tag :type="row.role === 'admin' ? 'danger' : row.role === 'doctor' ? 'warning' : row.role === 'patient' ? 'success' : 'info'" size="small">
+              {{ row.role === 'admin' ? '管理员' : row.role === 'doctor' ? '医生' : row.role === 'patient' ? '患者' : '护士' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -62,10 +62,16 @@
           <el-input v-model="form.email" />
         </el-form-item>
         <el-form-item label="角色" prop="role">
-          <el-select v-model="form.role" style="width: 100%">
+          <el-select v-model="form.role" style="width: 100%" @change="onRoleChange">
             <el-option label="管理员" value="admin" />
             <el-option label="医生" value="doctor" />
             <el-option label="护士" value="nurse" />
+            <el-option label="患者" value="patient" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="关联老人" prop="elderId" v-if="form.role === 'patient'">
+          <el-select v-model="form.elderId" placeholder="选择老人" filterable style="width: 100%">
+            <el-option v-for="e in elderList" :key="e.id" :label="`${e.name}（${e.id}）`" :value="e.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态" prop="status">
@@ -84,10 +90,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { userApi } from '../api'
+import { userApi, elderApi } from '../api'
 import { exportToExcel } from '../utils/export'
 
 const tableData = ref([])
+const elderList = ref([])
 const loading = ref(false)
 const submitting = ref(false)
 const dialogVisible = ref(false)
@@ -106,15 +113,15 @@ const user = computed(() => {
 const isAdmin = computed(() => user.value.role === 'admin')
 
 const form = ref({
-  username: '', password: '', realName: '', phone: '', email: '', role: 'nurse', status: 1
+  username: '', password: '', realName: '', phone: '', email: '', role: 'nurse', elderId: null, status: 1
 })
 
-const rules = {
+const rules = computed(() => ({
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  password: isEdit.value ? [] : [{ required: true, message: '请输入密码', trigger: 'blur' }],
   realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
   role: [{ required: true, message: '请选择角色', trigger: 'change' }]
-}
+}))
 
 const dialogTitle = computed(() => isEdit.value ? '编辑用户' : '添加用户')
 
@@ -151,7 +158,7 @@ const openEdit = (row) => {
 }
 
 const resetForm = () => {
-  form.value = { username: '', password: '', realName: '', phone: '', email: '', role: 'nurse', status: 1 }
+  form.value = { username: '', password: '', realName: '', phone: '', email: '', role: 'nurse', elderId: null, status: 1 }
   formRef.value?.resetFields()
 }
 
@@ -183,7 +190,23 @@ const handleDelete = async (row) => {
   } catch { }
 }
 
-onMounted(loadData)
+const loadElders = async () => {
+  try {
+    const res = await elderApi.list({ pageNum: 1, pageSize: 1000 })
+    elderList.value = res.data.list || []
+  } catch { elderList.value = [] }
+}
+
+const onRoleChange = () => {
+  if (form.value.role !== 'patient') {
+    form.value.elderId = null
+  }
+}
+
+onMounted(() => {
+  loadData()
+  loadElders()
+})
 </script>
 
 <style scoped>

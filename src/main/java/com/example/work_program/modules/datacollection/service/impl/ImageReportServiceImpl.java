@@ -1,11 +1,15 @@
 package com.example.work_program.modules.datacollection.service.impl;
 
 import com.example.work_program.common.PageResult;
+import com.example.work_program.modules.datacollection.entity.HealthDataCollection;
 import com.example.work_program.modules.datacollection.entity.ImageReport;
+import com.example.work_program.modules.datacollection.mapper.HealthDataCollectionMapper;
 import com.example.work_program.modules.datacollection.mapper.ImageReportMapper;
 import com.example.work_program.modules.datacollection.service.ImageReportService;
+import com.example.work_program.util.SnowflakeIdGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +19,12 @@ public class ImageReportServiceImpl implements ImageReportService {
 
     @Autowired
     private ImageReportMapper imageReportMapper;
+
+    @Autowired
+    private HealthDataCollectionMapper healthDataCollectionMapper;
+
+    @Autowired
+    private SnowflakeIdGenerator idGenerator;
 
     @Override
     public ImageReport findById(Long id) {
@@ -43,8 +53,21 @@ public class ImageReportServiceImpl implements ImageReportService {
     }
 
     @Override
+    @Transactional
     public void add(ImageReport report) {
+        report.setId(idGenerator.nextId());
         imageReportMapper.insert(report);
+
+        // 同时写入 health_data_collection 表
+        HealthDataCollection collection = new HealthDataCollection();
+        collection.setId(idGenerator.nextId());
+        collection.setElderId(report.getElderId());
+        collection.setDataSource("image");
+        collection.setDataType(report.getImageType());
+        collection.setDataContent(report.getDiagnosisResult());
+        collection.setCollector(report.getDoctorName());
+        collection.setCollectionDate(report.getDiagnosisDate());
+        healthDataCollectionMapper.insert(collection);
     }
 
     @Override

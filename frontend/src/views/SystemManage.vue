@@ -10,7 +10,7 @@
             </div>
             <div class="stat-info">
               <h4>{{ sysStats.dictTypes || 0 }}</h4>
-              <p>字典类型数</p>
+              <p>字典类型</p>
             </div>
           </div>
         </el-card>
@@ -34,7 +34,7 @@
       </el-tabs>
 
       <el-table :data="dictItems" border stripe v-loading="loading" v-if="currentDictType">
-        <el-table-column prop="id" label="ID" width="80" />
+        <el-table-column prop="id" label="ID" width="180" />
         <el-table-column prop="dictKey" label="字典键" width="180" />
         <el-table-column prop="dictValue" label="字典值" min-width="200" />
         <el-table-column prop="sort" label="排序" width="80" />

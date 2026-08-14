@@ -7,15 +7,15 @@ import java.util.List;
 @Mapper
 public interface HealthAlertMapper {
     @Select("<script>SELECT * FROM homecare_health_alert <where>" +
-            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
-            "<if test='isRead != null'>AND is_read = #{isRead}</if>" +
+            "<if test='elderId != null'> AND elder_id = #{elderId}</if>" +
+            "<if test='isRead != null'> AND is_read = #{isRead}</if>" +
             "</where> ORDER BY create_time DESC LIMIT #{offset}, #{limit}</script>")
     List<HealthAlert> findAll(@Param("elderId") Long elderId, @Param("isRead") Integer isRead,
                              @Param("offset") int offset, @Param("limit") int limit);
 
     @Select("<script>SELECT COUNT(*) FROM homecare_health_alert <where>" +
-            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
-            "<if test='isRead != null'>AND is_read = #{isRead}</if>" +
+            "<if test='elderId != null'> AND elder_id = #{elderId}</if>" +
+            "<if test='isRead != null'> AND is_read = #{isRead}</if>" +
             "</where></script>")
     Long count(@Param("elderId") Long elderId, @Param("isRead") Integer isRead);
 

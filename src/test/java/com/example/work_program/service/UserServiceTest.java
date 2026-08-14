@@ -1,6 +1,8 @@
 package com.example.work_program.service;
 
-import com.example.work_program.entity.User;
+import com.example.work_program.common.PageResult;
+import com.example.work_program.modules.system.entity.User;
+import com.example.work_program.modules.system.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -51,16 +53,16 @@ class UserServiceTest {
 
     @Test
     void testFindAll() {
-        List<User> users = userService.findAll(null, null);
-        assertFalse(users.isEmpty());
-        assertTrue(users.size() >= 3);
+        PageResult<User> page = userService.findAll(null, null, 1, 100);
+        assertFalse(page.getList().isEmpty());
+        assertTrue(page.getList().size() >= 3);
     }
 
     @Test
     void testFindAllByUsername() {
-        List<User> users = userService.findAll("admin", null);
-        assertEquals(1, users.size());
-        assertEquals("admin", users.get(0).getUsername());
+        PageResult<User> page = userService.findAll("admin", null, 1, 100);
+        assertEquals(1, page.getList().size());
+        assertEquals("admin", page.getList().get(0).getUsername());
     }
 
     @Test

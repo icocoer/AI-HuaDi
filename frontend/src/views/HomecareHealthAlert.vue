@@ -13,20 +13,48 @@
           <el-option label="未读" :value="0" /><el-option label="已读" :value="1" />
         </el-select>
         <el-button type="primary" @click="loadData" style="margin-left: 10px">查询</el-button>
+        <el-button type="success" @click="runAiAnalysis" :loading="aiLoading" style="margin-left: 10px">
+          AI趋势分析
+        </el-button>
       </div>
 
+      <!-- AI分析结果 -->
+      <el-alert v-if="aiResults.length > 0" type="info" :closable="true" @close="aiResults = []" style="margin-top: 15px">
+        <template #title>
+          <span style="font-weight: 600">AI分析报告</span>
+        </template>
+        <div v-for="(r, i) in aiResults" :key="i" style="margin-top: 8px; font-size: 13px">
+          <div>
+            <strong>{{ r.elderName }}</strong>
+            <el-tag :type="r.riskLevel === 'danger' ? 'danger' : 'warning'" size="small" style="margin-left: 8px">
+              风险概率 {{ (r.riskScore * 100).toFixed(0) }}%
+            </el-tag>
+          </div>
+          <div style="color: #606266; margin-top: 4px">{{ r.summary }}</div>
+          <div v-for="(a, j) in r.alerts" :key="j" style="margin-left: 16px; color: #E6A23C">
+            - {{ a }}
+          </div>
+        </div>
+      </el-alert>
+
       <el-table :data="tableData" border stripe v-loading="loading" style="margin-top: 15px">
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="elderId" label="老人ID" width="80" />
+        <el-table-column prop="id" label="ID" width="180" />
+        <el-table-column label="老人" width="100">
+          <template #default="{ row }">{{ getDisplayName(elderNameMap, row.elderId) }}</template>
+        </el-table-column>
         <el-table-column prop="alertType" label="预警类型" width="120">
           <template #default="{ row }">
-            {{ row.alertType === 'blood_pressure' ? '血压' : row.alertType === 'blood_sugar' ? '血糖' : row.alertType === 'heart_rate' ? '心率' : row.alertType }}
+            <el-tag v-if="row.alertType === 'trend_anomaly'" type="primary" size="small" effect="dark">AI趋势预警</el-tag>
+            <el-tag v-else-if="row.alertType === 'threshold_exceeded'" type="warning" size="small" effect="dark">AI阈值预警</el-tag>
+            <el-tag v-else size="small">
+              {{ row.alertType === 'blood_pressure' ? '血压' : row.alertType === 'blood_sugar' ? '血糖' : row.alertType === 'heart_rate' ? '心率' : row.alertType }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="alertLevel" label="预警级别" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.alertLevel === 'danger' ? 'danger' : 'warning'" size="small">
-              {{ row.alertLevel === 'danger' ? '危险' : '警告' }}
+            <el-tag :type="row.alertLevel === 'danger' ? 'danger' : 'warning'" size="small" effect="dark">
+              {{ row.alertLevel === 'danger' ? '高危' : '警告' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -59,13 +87,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { homecareApi, elderApi } from '../api'
+import { buildNameMap, getDisplayName } from '../utils/nameResolver'
 
 const tableData = ref([])
 const elderList = ref([])
+const elderNameMap = computed(() => buildNameMap(elderList.value))
 const loading = ref(false)
+const aiLoading = ref(false)
+const aiResults = ref([])
 const searchElderId = ref(null)
 const searchIsRead = ref('')
 const pageNum = ref(1)
@@ -88,6 +120,24 @@ const handleMarkRead = async (row) => {
     ElMessage.success('已标记为已读')
     loadData()
   } catch { }
+}
+
+const runAiAnalysis = async () => {
+  aiLoading.value = true
+  try {
+    const res = await homecareApi.runAiAnalysis(searchElderId.value || undefined)
+    aiResults.value = res.data || []
+    if (aiResults.value.length === 0) {
+      ElMessage.success('AI分析完成，未发现异常')
+    } else {
+      ElMessage.warning(`AI分析完成，发现${aiResults.value.length}位老人存在异常`)
+      loadData()
+    }
+  } catch {
+    ElMessage.error('AI分析失败')
+  } finally {
+    aiLoading.value = false
+  }
 }
 
 const loadElders = async () => {

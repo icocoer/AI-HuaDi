@@ -17,9 +17,13 @@
       </div>
 
       <el-table :data="tableData" border stripe v-loading="loading" style="margin-top: 15px">
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="senderId" label="发送者ID" width="100" />
-        <el-table-column prop="receiverId" label="接收者ID" width="100" />
+        <el-table-column prop="id" label="ID" width="180" />
+        <el-table-column label="发送者" width="100">
+          <template #default="{ row }">{{ getDisplayName(userNameMap, row.senderId) }}</template>
+        </el-table-column>
+        <el-table-column label="接收者" width="100">
+          <template #default="{ row }">{{ getDisplayName(userNameMap, row.receiverId) }}</template>
+        </el-table-column>
         <el-table-column prop="messageType" label="消息类型" width="100">
           <template #default="{ row }">
             <el-tag :type="row.messageType === 'text' ? 'info' : row.messageType === 'image' ? 'success' : 'warning'" size="small">
@@ -56,8 +60,10 @@
     <!-- 发送消息弹窗 -->
     <el-dialog title="发送消息" v-model="dialogVisible" width="500px" @close="resetForm">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-        <el-form-item label="接收者ID" prop="receiverId">
-          <el-input v-model.number="form.receiverId" />
+        <el-form-item label="接收者" prop="receiverId">
+          <el-select v-model="form.receiverId" placeholder="选择接收者" filterable style="width: 100%">
+            <el-option v-for="u in userList" :key="u.id" :label="`${u.realName || u.username}（${u.id}）`" :value="u.id" />
+          </el-select>
         </el-form-item>
         <el-form-item label="消息类型" prop="messageType">
           <el-select v-model="form.messageType" style="width: 100%">
@@ -77,12 +83,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { homecareApi } from '../api'
+import { homecareApi, userApi } from '../api'
+import { buildNameMap, getDisplayName } from '../utils/nameResolver'
 
 const tableData = ref([])
+const userList = ref([])
+const userNameMap = computed(() => buildNameMap(userList.value))
 const loading = ref(false)
 const submitting = ref(false)
 const dialogVisible = ref(false)
@@ -100,7 +109,7 @@ const form = ref({
 })
 
 const rules = {
-  receiverId: [{ required: true, message: '请输入接收者ID', trigger: 'blur' }],
+  receiverId: [{ required: true, message: '请选择接收者', trigger: 'change' }],
   content: [{ required: true, message: '请输入消息内容', trigger: 'blur' }]
 }
 
@@ -139,7 +148,17 @@ const handleMarkRead = async (row) => {
   } catch { }
 }
 
-onMounted(loadData)
+const loadUsers = async () => {
+  try {
+    const res = await userApi.list({ pageNum: 1, pageSize: 1000 })
+    userList.value = res.data.list || []
+  } catch { userList.value = [] }
+}
+
+onMounted(() => {
+  loadData()
+  loadUsers()
+})
 </script>
 
 <style scoped>

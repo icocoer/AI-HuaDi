@@ -8,14 +8,14 @@ import java.util.List;
 @Mapper
 public interface ElderHealthRecordMapper {
     @Select("<script>SELECT * FROM elder_health_record <where>" +
-            "<if test='name != null and name != \"\"'>AND name LIKE CONCAT('%', #{name}, '%')</if>" +
-            "<if test='riskLevel != null and riskLevel != \"\"'>AND risk_level = #{riskLevel}</if>" +
+            "<if test='name != null and name != \"\"'> AND name LIKE CONCAT('%', #{name}, '%')</if>" +
+            "<if test='riskLevel != null and riskLevel != \"\"'> AND risk_level = #{riskLevel}</if>" +
             "</where> ORDER BY create_time DESC LIMIT #{offset}, #{limit}</script>")
     List<ElderHealthRecord> findAll(@Param("name") String name, @Param("riskLevel") String riskLevel, @Param("offset") int offset, @Param("limit") int limit);
 
     @Select("<script>SELECT COUNT(*) FROM elder_health_record <where>" +
-            "<if test='name != null and name != \"\"'>AND name LIKE CONCAT('%', #{name}, '%')</if>" +
-            "<if test='riskLevel != null and riskLevel != \"\"'>AND risk_level = #{riskLevel}</if>" +
+            "<if test='name != null and name != \"\"'> AND name LIKE CONCAT('%', #{name}, '%')</if>" +
+            "<if test='riskLevel != null and riskLevel != \"\"'> AND risk_level = #{riskLevel}</if>" +
             "</where></script>")
     Long count(@Param("name") String name, @Param("riskLevel") String riskLevel);
 

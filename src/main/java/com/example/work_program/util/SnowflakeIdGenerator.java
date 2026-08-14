@@ -3,8 +3,9 @@ package com.example.work_program.util;
 import org.springframework.stereotype.Component;
 
 /**
- * 简化版雪花算法 ID 生成器（不含机器 ID）
+ * 雪花算法 ID 生成器
  * 结构: 41-bit 时间戳 + 22-bit 序列号 = 63-bit（正 Long）
+ * 保证全局唯一，重启不冲突
  */
 @Component
 public class SnowflakeIdGenerator {

@@ -17,14 +17,14 @@ public interface ImageReportMapper {
     List<ImageReport> findByCollectionId(@Param("collectionId") Long collectionId);
 
     @Select("<script>SELECT * FROM image_report <where>" +
-            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
-            "<if test='imageType != null and imageType != \"\"'>AND image_type = #{imageType}</if>" +
+            "<if test='elderId != null'> AND elder_id = #{elderId}</if>" +
+            "<if test='imageType != null and imageType != \"\"'> AND image_type = #{imageType}</if>" +
             "</where> ORDER BY upload_time DESC LIMIT #{offset}, #{limit}</script>")
     List<ImageReport> findAll(@Param("elderId") Long elderId, @Param("imageType") String imageType, @Param("offset") int offset, @Param("limit") int limit);
 
     @Select("<script>SELECT COUNT(*) FROM image_report <where>" +
-            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
-            "<if test='imageType != null and imageType != \"\"'>AND image_type = #{imageType}</if>" +
+            "<if test='elderId != null'> AND elder_id = #{elderId}</if>" +
+            "<if test='imageType != null and imageType != \"\"'> AND image_type = #{imageType}</if>" +
             "</where></script>")
     Long count(@Param("elderId") Long elderId, @Param("imageType") String imageType);
 

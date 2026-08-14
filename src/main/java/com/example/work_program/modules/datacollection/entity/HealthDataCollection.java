@@ -13,6 +13,7 @@ public class HealthDataCollection {
     @NotNull(message = "老人ID不能为空")
     private Long elderId;
 
+    private String elderName; // 关联查询字段
     private String dataSource;
     private String dataType;
     private String dataContent;

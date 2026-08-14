@@ -4,11 +4,20 @@ import com.example.work_program.annotation.LoginRequired;
 import com.example.work_program.annotation.LogOperation;
 import com.example.work_program.common.PageResult;
 import com.example.work_program.common.Result;
+import com.example.work_program.modules.datacollection.entity.HealthDataCollection;
+import com.example.work_program.modules.datacollection.mapper.HealthDataCollectionMapper;
+import com.example.work_program.modules.elder.entity.ElderHealthRecord;
+import com.example.work_program.modules.elder.mapper.ElderHealthRecordMapper;
+import com.example.work_program.modules.homecare.ai.AiHealthAnalyzer;
 import com.example.work_program.modules.homecare.entity.*;
 import com.example.work_program.modules.homecare.service.HomecareService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/homecare")
@@ -17,6 +26,15 @@ public class HomecareController {
 
     @Autowired
     private HomecareService homecareService;
+
+    @Autowired
+    private AiHealthAnalyzer aiHealthAnalyzer;
+
+    @Autowired
+    private HealthDataCollectionMapper healthDataCollectionMapper;
+
+    @Autowired
+    private ElderHealthRecordMapper elderHealthRecordMapper;
 
     // ==================== 随访计划接口 ====================
 
@@ -126,5 +144,47 @@ public class HomecareController {
     public Result<Void> sendMessage(@Valid @RequestBody Message message) {
         homecareService.sendMessage(message);
         return Result.success("消息发送成功", null);
+    }
+
+    // ==================== AI健康分析接口 ====================
+
+    @PostMapping("/ai/analyze")
+    @LoginRequired(roles = {"admin", "doctor"})
+    @LogOperation("AI健康趋势分析")
+    public Result<List<Map<String, Object>>> runAiAnalysis(
+            @RequestParam(required = false) Long elderId) {
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        if (elderId != null) {
+            ElderHealthRecord elder = elderHealthRecordMapper.findById(elderId);
+            List<HealthDataCollection> data = healthDataCollectionMapper.findRecentByElderId(elderId, 7);
+            AiHealthAnalyzer.AnalysisResult ar = aiHealthAnalyzer.analyze(data);
+            Map<String, Object> item = new HashMap<>();
+            item.put("elderId", elderId);
+            item.put("elderName", elder != null ? elder.getName() : "未知");
+            item.put("riskLevel", ar.getRiskLevel());
+            item.put("riskScore", ar.getRiskScore());
+            item.put("summary", ar.getSummary());
+            item.put("alerts", ar.getAlerts());
+            results.add(item);
+        } else {
+            List<ElderHealthRecord> elders = elderHealthRecordMapper.findAll(null, null, 0, 1000);
+            for (ElderHealthRecord elder : elders) {
+                List<HealthDataCollection> data = healthDataCollectionMapper.findRecentByElderId(elder.getId(), 7);
+                if (data.isEmpty()) continue;
+                AiHealthAnalyzer.AnalysisResult ar = aiHealthAnalyzer.analyze(data);
+                if (!"normal".equals(ar.getRiskLevel())) {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("elderId", elder.getId());
+                    item.put("elderName", elder.getName());
+                    item.put("riskLevel", ar.getRiskLevel());
+                    item.put("riskScore", ar.getRiskScore());
+                    item.put("summary", ar.getSummary());
+                    item.put("alerts", ar.getAlerts());
+                    results.add(item);
+                }
+            }
+        }
+        return Result.success(results);
     }
 }

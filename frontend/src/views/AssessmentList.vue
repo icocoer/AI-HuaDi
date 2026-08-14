@@ -19,9 +19,13 @@
       </div>
 
       <el-table :data="tableData" border stripe v-loading="loading" style="margin-top: 15px">
-        <el-table-column prop="id" label="ID" width="60" />
-        <el-table-column prop="elderId" label="老人ID" width="80" />
-        <el-table-column prop="assessmentType" label="评估类型" width="120" />
+        <el-table-column prop="id" label="ID" width="180" />
+        <el-table-column label="老人" width="100">
+          <template #default="{ row }">{{ getDisplayName(elderNameMap, row.elderId) }}</template>
+        </el-table-column>
+        <el-table-column label="评估类型" width="120">
+          <template #default="{ row }">{{ assessmentTypeLabel(row.assessmentType) }}</template>
+        </el-table-column>
         <el-table-column prop="totalScore" label="总分" width="80" />
         <el-table-column prop="riskLevel" label="风险等级" width="100">
           <template #default="{ row }">
@@ -121,14 +125,17 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { assessmentApi, riskApi, elderApi, userApi } from '../api'
+import { assessmentApi, riskApi, elderApi, userApi, systemApi } from '../api'
 import { exportToExcel } from '../utils/export'
+import { buildNameMap, getDisplayName } from '../utils/nameResolver'
 
 const user = JSON.parse(localStorage.getItem('user') || '{}')
 
 const tableData = ref([])
 const elderList = ref([])
+const elderNameMap = computed(() => buildNameMap(elderList.value))
 const doctorList = ref([])
+const assessmentTypes = ref({})
 const loading = ref(false)
 const submitting = ref(false)
 const dialogVisible = ref(false)
@@ -254,10 +261,26 @@ const loadDoctors = async () => {
   } catch { doctorList.value = [] }
 }
 
+const loadAssessmentTypes = async () => {
+  try {
+    const res = await systemApi.dictByType('assessment_type')
+    const map = {}
+    if (res.data) {
+      res.data.forEach(item => { map[item.dictKey] = item.dictValue })
+    }
+    assessmentTypes.value = map
+  } catch { }
+}
+
+const assessmentTypeLabel = (val) => {
+  return assessmentTypes.value[val] || val
+}
+
 onMounted(() => {
   loadData()
   loadElders()
   loadDoctors()
+  loadAssessmentTypes()
 })
 </script>
 

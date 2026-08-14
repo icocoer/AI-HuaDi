@@ -8,14 +8,14 @@ import java.util.List;
 @Mapper
 public interface InterventionExecutionMapper {
     @Select("<script>SELECT * FROM intervention_execution <where>" +
-            "<if test='planId != null'>AND plan_id = #{planId}</if>" +
-            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
+            "<if test='planId != null'> AND plan_id = #{planId}</if>" +
+            "<if test='elderId != null'> AND elder_id = #{elderId}</if>" +
             "</where> ORDER BY execution_date DESC LIMIT #{offset}, #{limit}</script>")
     List<InterventionExecution> findAll(@Param("planId") Long planId, @Param("elderId") Long elderId, @Param("offset") int offset, @Param("limit") int limit);
 
     @Select("<script>SELECT COUNT(*) FROM intervention_execution <where>" +
-            "<if test='planId != null'>AND plan_id = #{planId}</if>" +
-            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
+            "<if test='planId != null'> AND plan_id = #{planId}</if>" +
+            "<if test='elderId != null'> AND elder_id = #{elderId}</if>" +
             "</where></script>")
     Long count(@Param("planId") Long planId, @Param("elderId") Long elderId);
 

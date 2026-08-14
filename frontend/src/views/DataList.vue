@@ -11,9 +11,29 @@
       <template #header>
         <div class="card-header">
           <span class="card-title">数据采集记录</span>
-          <el-button type="primary" @click="openAddModal">
-            <el-icon><Plus /></el-icon>新增采集
-          </el-button>
+          <div v-if="activeTab !== 'all'">
+            <el-button v-if="activeTab === 'smart'" type="primary" @click="openSmartForm('add')">
+              <el-icon><Plus /></el-icon>新增评估
+            </el-button>
+            <el-button v-if="activeTab === 'questionnaire'" type="primary" @click="openQuestionnaireForm('add')">
+              <el-icon><Plus /></el-icon>新增问询
+            </el-button>
+            <el-button v-if="activeTab === 'image'" type="primary" @click="openImageForm('add')">
+              <el-icon><Plus /></el-icon>新增影像
+            </el-button>
+          </div>
+          <el-dropdown v-else @command="handleAddCommand">
+            <el-button type="primary">
+              <el-icon><Plus /></el-icon>新增采集
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="smart">智能评估</el-dropdown-item>
+                <el-dropdown-item command="questionnaire">健康问询</el-dropdown-item>
+                <el-dropdown-item command="image">影像报告</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
       </template>
 
@@ -26,18 +46,16 @@
         </el-form-item>
         <el-form-item label="数据来源" v-if="activeTab === 'all'">
           <el-select v-model="query.dataSource" placeholder="全部" clearable style="width: 140px">
-            <el-option label="智能评估" value="smart" />
-            <el-option label="健康问询" value="questionnaire" />
-            <el-option label="影像报告" value="image" />
+            <el-option v-for="(label, key) in dictMap.data_source" :key="key" :label="label" :value="key" />
           </el-select>
         </el-form-item>
         <el-form-item label="数据类型" v-if="activeTab !== 'all'">
           <el-select v-model="query.dataType" placeholder="全部" clearable style="width: 160px">
             <el-option
-              v-for="opt in currentTypeOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
+              v-for="(label, key) in currentTypeOptions"
+              :key="key"
+              :label="label"
+              :value="key"
             />
           </el-select>
         </el-form-item>
@@ -63,14 +81,16 @@
         <!-- 全部记录列 -->
         <template v-if="activeTab === 'all'">
           <el-table-column prop="elderName" label="老人姓名" min-width="100" />
-          <el-table-column prop="dataSourceDesc" label="数据来源" min-width="100">
+          <el-table-column label="数据来源" min-width="100">
             <template #default="{ row }">
               <el-tag :type="sourceTagType(row.dataSource)" size="small">
-                {{ row.dataSourceDesc || row.dataSource }}
+                {{ dataSourceLabel(row.dataSource) }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="dataTypeDesc" label="数据类型" min-width="120" />
+          <el-table-column label="数据类型" min-width="120">
+            <template #default="{ row }">{{ dataTypeLabel(row.dataSource, row.dataType) }}</template>
+          </el-table-column>
           <el-table-column prop="collectionDate" label="采集日期" min-width="120" />
           <el-table-column prop="collector" label="采集人" min-width="90" />
           <el-table-column prop="createTime" label="创建时间" min-width="150" />
@@ -78,8 +98,12 @@
 
         <!-- 智能评估列 -->
         <template v-if="activeTab === 'smart'">
-          <el-table-column prop="elderId" label="老人ID" min-width="90" />
-          <el-table-column prop="assessmentType" label="评估类型" min-width="120" />
+          <el-table-column label="老人" min-width="100">
+            <template #default="{ row }">{{ getDisplayName(elderNameMap, row.elderId) }}</template>
+          </el-table-column>
+          <el-table-column label="评估类型" min-width="120">
+            <template #default="{ row }">{{ assessmentTypeLabel(row.assessmentType) }}</template>
+          </el-table-column>
           <el-table-column prop="totalScore" label="总分" min-width="80" />
           <el-table-column prop="scoreLevel" label="等级" min-width="90">
             <template #default="{ row }">
@@ -92,8 +116,12 @@
 
         <!-- 健康问询列 -->
         <template v-if="activeTab === 'questionnaire'">
-          <el-table-column prop="elderId" label="老人ID" min-width="90" />
-          <el-table-column prop="questionnaireType" label="问卷类型" min-width="120" />
+          <el-table-column label="老人" min-width="100">
+            <template #default="{ row }">{{ getDisplayName(elderNameMap, row.elderId) }}</template>
+          </el-table-column>
+          <el-table-column label="问卷类型" min-width="120">
+            <template #default="{ row }">{{ questionnaireTypeLabel(row.questionnaireType) }}</template>
+          </el-table-column>
           <el-table-column prop="summary" label="摘要" min-width="180" show-overflow-tooltip />
           <el-table-column prop="surveyor" label="调查人" min-width="90" />
           <el-table-column prop="surveyTime" label="调查时间" min-width="150" />
@@ -101,8 +129,12 @@
 
         <!-- 影像报告列 -->
         <template v-if="activeTab === 'image'">
-          <el-table-column prop="elderId" label="老人ID" min-width="90" />
-          <el-table-column prop="imageType" label="影像类型" min-width="100" />
+          <el-table-column label="老人" min-width="100">
+            <template #default="{ row }">{{ getDisplayName(elderNameMap, row.elderId) }}</template>
+          </el-table-column>
+          <el-table-column label="影像类型" min-width="100">
+            <template #default="{ row }">{{ imageTypeLabel(row.imageType) }}</template>
+          </el-table-column>
           <el-table-column prop="diagnosisResult" label="诊断结果" min-width="120" />
           <el-table-column prop="institution" label="检查机构" min-width="140" />
           <el-table-column prop="diagnosisDate" label="检查日期" min-width="120" />
@@ -137,12 +169,27 @@
       </div>
     </el-card>
 
-    <!-- 新增/编辑弹窗 -->
-    <AddEditModal
-      v-model:visible="modalVisible"
-      :mode="modalMode"
+    <!-- 智能评估弹窗 -->
+    <SmartAssessmentForm
+      v-model:visible="smartFormVisible"
+      :mode="formMode"
       :record="currentRecord"
-      :tab="activeTab"
+      @success="loadData"
+    />
+
+    <!-- 健康问询弹窗 -->
+    <QuestionnaireForm
+      v-model:visible="questionnaireFormVisible"
+      :mode="formMode"
+      :record="currentRecord"
+      @success="loadData"
+    />
+
+    <!-- 影像报告弹窗 -->
+    <ImageReportForm
+      v-model:visible="imageFormVisible"
+      :mode="formMode"
+      :record="currentRecord"
       @success="loadData"
     />
 
@@ -160,15 +207,41 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { dataCollectionApi, smartAssessmentApi, healthQuestionnaireApi, imageReportApi, elderApi } from '../api'
+import { dataCollectionApi, smartAssessmentApi, healthQuestionnaireApi, imageReportApi, elderApi, systemApi } from '../api'
 import { exportToExcel } from '../utils/export'
-import AddEditModal from '../components/AddEditModal.vue'
+import { buildNameMap, getDisplayName } from '../utils/nameResolver'
+import SmartAssessmentForm from '../components/SmartAssessmentForm.vue'
+import QuestionnaireForm from '../components/QuestionnaireForm.vue'
+import ImageReportForm from '../components/ImageReportForm.vue'
 import DetailModal from '../components/DetailModal.vue'
 
 const route = useRoute()
 const activeTab = ref('all')
 const tableData = ref([])
 const elderList = ref([])
+const elderNameMap = computed(() => buildNameMap(elderList.value))
+
+// 字典数据
+const dictMap = ref({
+  data_source: {},
+  smart_type: {},
+  questionnaire_type: {},
+  image_type: {}
+})
+
+const loadDict = async () => {
+  try {
+    const types = ['data_source', 'smart_type', 'questionnaire_type', 'image_type']
+    for (const type of types) {
+      const res = await systemApi.dictByType(type)
+      const map = {}
+      if (res.data) {
+        res.data.forEach(item => { map[item.dictKey] = item.dictValue })
+      }
+      dictMap.value[type] = map
+    }
+  } catch { }
+}
 const loading = ref(false)
 const total = ref(0)
 const pageNum = ref(1)
@@ -180,33 +253,18 @@ const query = reactive({
   dataType: ''
 })
 
-const modalVisible = ref(false)
-const modalMode = ref('add')
+const smartFormVisible = ref(false)
+const questionnaireFormVisible = ref(false)
+const imageFormVisible = ref(false)
+const formMode = ref('add')
 const currentRecord = ref({})
 const detailVisible = ref(false)
 
 const currentTypeOptions = computed(() => {
-  const map = {
-    smart: [
-      { label: '认知筛查', value: 'COGNITIVE_SCREENING' },
-      { label: '运动功能', value: 'MOTOR_FUNCTION' },
-      { label: '生命体征', value: 'VITAL_SIGNS' }
-    ],
-    questionnaire: [
-      { label: '病史问询', value: 'MEDICAL_HISTORY' },
-      { label: '家族史', value: 'FAMILY_HISTORY' },
-      { label: '生活方式', value: 'LIFESTYLE' },
-      { label: '症状检查', value: 'SYMPTOM_CHECK' }
-    ],
-    image: [
-      { label: 'CT影像', value: 'CT_IMAGE' },
-      { label: 'MRI影像', value: 'MRI_IMAGE' },
-      { label: 'X光影像', value: 'XRAY_IMAGE' },
-      { label: '超声', value: 'ULTRASOUND' },
-      { label: '其他', value: 'OTHER_IMAGE' }
-    ]
-  }
-  return map[activeTab.value] || []
+  if (activeTab.value === 'smart') return dictMap.value.smart_type
+  if (activeTab.value === 'questionnaire') return dictMap.value.questionnaire_type
+  if (activeTab.value === 'image') return dictMap.value.image_type
+  return {}
 })
 
 const sourceTagType = (source) => {
@@ -217,6 +275,30 @@ const sourceTagType = (source) => {
 const scoreLevelTag = (level) => {
   const map = { '正常': 'success', '轻度异常': 'warning', '中度异常': 'warning', '重度异常': 'danger' }
   return map[level] || 'info'
+}
+
+// 类型映射函数
+const assessmentTypeLabel = (val) => {
+  return dictMap.value.smart_type[val] || val
+}
+
+const questionnaireTypeLabel = (val) => {
+  return dictMap.value.questionnaire_type[val] || val
+}
+
+const imageTypeLabel = (val) => {
+  return dictMap.value.image_type[val] || val
+}
+
+const dataSourceLabel = (val) => {
+  return dictMap.value.data_source[val] || val
+}
+
+const dataTypeLabel = (source, type) => {
+  if (source === 'smart') return assessmentTypeLabel(type)
+  if (source === 'questionnaire') return questionnaireTypeLabel(type)
+  if (source === 'image') return imageTypeLabel(type)
+  return type
 }
 
 const parseNumber = (val) => {
@@ -353,16 +435,35 @@ const handleTabChange = () => {
   loadData()
 }
 
-const openAddModal = () => {
-  modalMode.value = 'add'
-  currentRecord.value = {}
-  modalVisible.value = true
+const handleAddCommand = (command) => {
+  if (command === 'smart') openSmartForm('add')
+  else if (command === 'questionnaire') openQuestionnaireForm('add')
+  else if (command === 'image') openImageForm('add')
+}
+
+const openSmartForm = (mode, row = {}) => {
+  formMode.value = mode
+  currentRecord.value = { ...row }
+  smartFormVisible.value = true
+}
+
+const openQuestionnaireForm = (mode, row = {}) => {
+  formMode.value = mode
+  currentRecord.value = { ...row }
+  questionnaireFormVisible.value = true
+}
+
+const openImageForm = (mode, row = {}) => {
+  formMode.value = mode
+  currentRecord.value = { ...row }
+  imageFormVisible.value = true
 }
 
 const openEdit = (row) => {
-  modalMode.value = 'edit'
-  currentRecord.value = { ...row }
-  modalVisible.value = true
+  const source = row.dataSource || activeTab.value
+  if (source === 'smart') openSmartForm('edit', row)
+  else if (source === 'questionnaire') openQuestionnaireForm('edit', row)
+  else if (source === 'image') openImageForm('edit', row)
 }
 
 const openDetail = (row) => {
@@ -402,6 +503,7 @@ onMounted(() => {
   if (route.query.tab) activeTab.value = route.query.tab
   loadData()
   loadElders()
+  loadDict()
 })
 </script>
 

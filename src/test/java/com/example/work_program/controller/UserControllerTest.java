@@ -1,6 +1,6 @@
 package com.example.work_program.controller;
 
-import com.example.work_program.entity.User;
+import com.example.work_program.modules.system.entity.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

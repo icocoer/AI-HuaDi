@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS sys_user (
     email VARCHAR(100),
     status INT DEFAULT 1,
     role VARCHAR(20) DEFAULT 'nurse',
+    elder_id BIGINT,
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

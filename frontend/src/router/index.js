@@ -6,6 +6,17 @@ const routes = [
     name: 'Login',
     component: () => import('../views/Login.vue')
   },
+  // 患者手机端路由
+  {
+    path: '/mobile/login',
+    name: 'PatientLogin',
+    component: () => import('../views/mobile/PatientLogin.vue')
+  },
+  {
+    path: '/mobile/portal',
+    name: 'PatientPortal',
+    component: () => import('../views/mobile/PatientPortal.vue')
+  },
   {
     path: '/',
     component: () => import('../views/Layout.vue'),
@@ -100,20 +111,60 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
+  let user = {}
+  try { user = JSON.parse(localStorage.getItem('user') || '{}') } catch { }
+
+  // 移动端路由处理
+  if (to.path.startsWith('/mobile/')) {
+    if (to.path === '/mobile/login') {
+      // 已登录患者跳转到门户
+      if (token && user.role === 'patient') {
+        next('/mobile/portal')
+        return
+      }
+      // 已登录非患者跳转到PC端
+      if (token && user.role !== 'patient') {
+        next('/dashboard')
+        return
+      }
+    } else {
+      // 未登录跳转到登录页
+      if (!token) {
+        next('/mobile/login')
+        return
+      }
+      // 非患者不允许访问手机端
+      if (user.role !== 'patient') {
+        next('/dashboard')
+        return
+      }
+    }
+    next()
+    return
+  }
+
+  // PC端路由处理
   if (to.path !== '/login' && !token) {
     next('/login')
     return
   }
+
+  // 患者不允许访问PC端，强制跳转手机端
+  if (token && user.role === 'patient') {
+    next('/mobile/portal')
+    return
+  }
+
+  // 已登录用户访问登录页跳转到首页
+  if (to.path === '/login' && token) {
+    next('/dashboard')
+    return
+  }
+
   const requiredRoles = to.meta?.roles
   if (requiredRoles && requiredRoles.length > 0) {
-    try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}')
-      if (!requiredRoles.includes(user.role)) {
-        next('/dashboard')
-        return
-      }
-    } catch {
-      next('/login')
+    if (!requiredRoles.includes(user.role)) {
+      next('/dashboard')
       return
     }
   }

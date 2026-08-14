@@ -1,11 +1,15 @@
 package com.example.work_program.modules.datacollection.service.impl;
 
 import com.example.work_program.common.PageResult;
+import com.example.work_program.modules.datacollection.entity.HealthDataCollection;
 import com.example.work_program.modules.datacollection.entity.SmartAssessment;
+import com.example.work_program.modules.datacollection.mapper.HealthDataCollectionMapper;
 import com.example.work_program.modules.datacollection.mapper.SmartAssessmentMapper;
 import com.example.work_program.modules.datacollection.service.SmartAssessmentService;
+import com.example.work_program.util.SnowflakeIdGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +19,12 @@ public class SmartAssessmentServiceImpl implements SmartAssessmentService {
 
     @Autowired
     private SmartAssessmentMapper smartAssessmentMapper;
+
+    @Autowired
+    private HealthDataCollectionMapper healthDataCollectionMapper;
+
+    @Autowired
+    private SnowflakeIdGenerator idGenerator;
 
     @Override
     public SmartAssessment findById(Long id) {
@@ -43,8 +53,21 @@ public class SmartAssessmentServiceImpl implements SmartAssessmentService {
     }
 
     @Override
+    @Transactional
     public void add(SmartAssessment assessment) {
+        assessment.setId(idGenerator.nextId());
         smartAssessmentMapper.insert(assessment);
+
+        // 同时写入 health_data_collection 表
+        HealthDataCollection collection = new HealthDataCollection();
+        collection.setId(idGenerator.nextId());
+        collection.setElderId(assessment.getElderId());
+        collection.setDataSource("smart");
+        collection.setDataType(assessment.getAssessmentType());
+        collection.setDataContent(assessment.getAssessmentResult());
+        collection.setCollector(assessment.getAssessor());
+        collection.setCollectionDate(assessment.getAssessmentTime() != null ? assessment.getAssessmentTime().toLocalDate() : null);
+        healthDataCollectionMapper.insert(collection);
     }
 
     @Override

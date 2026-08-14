@@ -4,6 +4,7 @@ import com.example.work_program.common.PageResult;
 import com.example.work_program.modules.intervention.entity.InterventionExecution;
 import com.example.work_program.modules.intervention.mapper.InterventionExecutionMapper;
 import com.example.work_program.modules.intervention.service.InterventionExecutionService;
+import com.example.work_program.util.SnowflakeIdGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,9 @@ public class InterventionExecutionServiceImpl implements InterventionExecutionSe
 
     @Autowired
     private InterventionExecutionMapper interventionExecutionMapper;
+
+    @Autowired
+    private SnowflakeIdGenerator idGenerator;
 
     @Override
     public PageResult<InterventionExecution> findAll(Long planId, Long elderId, int pageNum, int pageSize) {
@@ -34,6 +38,7 @@ public class InterventionExecutionServiceImpl implements InterventionExecutionSe
 
     @Override
     public void add(InterventionExecution execution) {
+        execution.setId(idGenerator.nextId());
         interventionExecutionMapper.insert(execution);
     }
 

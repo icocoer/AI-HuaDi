@@ -7,17 +7,17 @@ import java.util.List;
 @Mapper
 public interface MessageMapper {
     @Select("<script>SELECT * FROM homecare_message <where>" +
-            "<if test='senderId != null'>AND sender_id = #{senderId}</if>" +
-            "<if test='receiverId != null'>AND receiver_id = #{receiverId}</if>" +
-            "<if test='isRead != null'>AND is_read = #{isRead}</if>" +
+            "<if test='senderId != null'> AND sender_id = #{senderId}</if>" +
+            "<if test='receiverId != null'> AND receiver_id = #{receiverId}</if>" +
+            "<if test='isRead != null'> AND is_read = #{isRead}</if>" +
             "</where> ORDER BY create_time DESC LIMIT #{offset}, #{limit}</script>")
     List<Message> findAll(@Param("senderId") Long senderId, @Param("receiverId") Long receiverId,
                          @Param("isRead") Integer isRead, @Param("offset") int offset, @Param("limit") int limit);
 
     @Select("<script>SELECT COUNT(*) FROM homecare_message <where>" +
-            "<if test='senderId != null'>AND sender_id = #{senderId}</if>" +
-            "<if test='receiverId != null'>AND receiver_id = #{receiverId}</if>" +
-            "<if test='isRead != null'>AND is_read = #{isRead}</if>" +
+            "<if test='senderId != null'> AND sender_id = #{senderId}</if>" +
+            "<if test='receiverId != null'> AND receiver_id = #{receiverId}</if>" +
+            "<if test='isRead != null'> AND is_read = #{isRead}</if>" +
             "</where></script>")
     Long count(@Param("senderId") Long senderId, @Param("receiverId") Long receiverId, @Param("isRead") Integer isRead);
 

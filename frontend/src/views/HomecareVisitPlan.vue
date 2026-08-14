@@ -19,9 +19,13 @@
       </div>
 
       <el-table :data="tableData" border stripe v-loading="loading" style="margin-top: 15px">
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="elderId" label="老人ID" width="80" />
-        <el-table-column prop="doctorId" label="医生ID" width="80" />
+        <el-table-column prop="id" label="ID" width="180" />
+        <el-table-column label="老人" width="100">
+          <template #default="{ row }">{{ getDisplayName(elderNameMap, row.elderId) }}</template>
+        </el-table-column>
+        <el-table-column label="责任医生" width="100">
+          <template #default="{ row }">{{ getDisplayName(doctorNameMap, row.doctorId) }}</template>
+        </el-table-column>
         <el-table-column prop="visitType" label="随访类型" width="100">
           <template #default="{ row }">
             <el-tag :type="row.visitType === 'home' ? 'success' : row.visitType === 'phone' ? 'warning' : 'info'" size="small">
@@ -109,12 +113,15 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { homecareApi, elderApi, userApi } from '../api'
+import { buildNameMap, getDisplayName } from '../utils/nameResolver'
 
 const user = JSON.parse(localStorage.getItem('user') || '{}')
 
 const tableData = ref([])
 const elderList = ref([])
+const elderNameMap = computed(() => buildNameMap(elderList.value))
 const doctorList = ref([])
+const doctorNameMap = computed(() => buildNameMap(doctorList.value))
 const loading = ref(false)
 const submitting = ref(false)
 const dialogVisible = ref(false)

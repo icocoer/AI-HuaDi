@@ -1,11 +1,15 @@
 package com.example.work_program.modules.datacollection.service.impl;
 
 import com.example.work_program.common.PageResult;
+import com.example.work_program.modules.datacollection.entity.HealthDataCollection;
 import com.example.work_program.modules.datacollection.entity.HealthQuestionnaire;
+import com.example.work_program.modules.datacollection.mapper.HealthDataCollectionMapper;
 import com.example.work_program.modules.datacollection.mapper.HealthQuestionnaireMapper;
 import com.example.work_program.modules.datacollection.service.HealthQuestionnaireService;
+import com.example.work_program.util.SnowflakeIdGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +19,12 @@ public class HealthQuestionnaireServiceImpl implements HealthQuestionnaireServic
 
     @Autowired
     private HealthQuestionnaireMapper healthQuestionnaireMapper;
+
+    @Autowired
+    private HealthDataCollectionMapper healthDataCollectionMapper;
+
+    @Autowired
+    private SnowflakeIdGenerator idGenerator;
 
     @Override
     public HealthQuestionnaire findById(Long id) {
@@ -43,8 +53,21 @@ public class HealthQuestionnaireServiceImpl implements HealthQuestionnaireServic
     }
 
     @Override
+    @Transactional
     public void add(HealthQuestionnaire questionnaire) {
+        questionnaire.setId(idGenerator.nextId());
         healthQuestionnaireMapper.insert(questionnaire);
+
+        // 同时写入 health_data_collection 表，供健康监测页面使用
+        HealthDataCollection collection = new HealthDataCollection();
+        collection.setId(idGenerator.nextId());
+        collection.setElderId(questionnaire.getElderId());
+        collection.setDataSource("questionnaire");
+        collection.setDataType(questionnaire.getQuestionnaireType());
+        collection.setDataContent(questionnaire.getSummary());
+        collection.setCollector(questionnaire.getSurveyor());
+        collection.setCollectionDate(questionnaire.getSurveyTime() != null ? questionnaire.getSurveyTime().toLocalDate() : null);
+        healthDataCollectionMapper.insert(collection);
     }
 
     @Override

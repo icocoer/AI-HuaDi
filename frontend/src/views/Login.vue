@@ -125,7 +125,12 @@ const handleLogin = async () => {
       localStorage.setItem('token', res.data.token)
       localStorage.setItem('user', JSON.stringify(res.data.user))
       ElMessage.success('登录成功')
-      router.push('/dashboard')
+      // 患者跳转到手机端
+      if (res.data.user.role === 'patient') {
+        router.push('/mobile/portal')
+      } else {
+        router.push('/dashboard')
+      }
     } else {
       ElMessage.error('登录失败：未获取到Token')
     }

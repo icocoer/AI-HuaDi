@@ -1,6 +1,7 @@
 package com.example.work_program.service;
 
-import com.example.work_program.entity.SysDict;
+import com.example.work_program.modules.system.entity.SysDict;
+import com.example.work_program.modules.system.service.SysDictService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

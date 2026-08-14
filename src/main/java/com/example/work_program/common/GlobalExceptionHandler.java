@@ -29,19 +29,24 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public Result<Void> handleNotReadable(HttpMessageNotReadableException e) {
-        log.warn("[请求体格式错误] {}", e.getMessage());
-        return Result.error(400, "请求体格式错误");
+        log.error("[请求体格式错误] {}", e.getMessage(), e);
+        // 提取根本原因信息
+        String detail = e.getMessage();
+        if (e.getCause() != null) {
+            detail = e.getCause().getMessage();
+        }
+        return Result.error(400, "请求体格式错误: " + detail);
     }
 
     @ExceptionHandler(RuntimeException.class)
     public Result<Void> handleRuntimeException(RuntimeException e) {
-        log.error("[运行时异常] {}", e.getMessage(), e);
-        return Result.error(500, e.getMessage());
+        log.error("[运行时异常] class={}, msg={}", e.getClass().getSimpleName(), e.getMessage(), e);
+        return Result.error(500, "运行时异常: " + e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
     public Result<Void> handleException(Exception e) {
-        log.error("[系统异常] {}", e.getMessage(), e);
-        return Result.error(500, "服务器内部错误，请联系管理员");
+        log.error("[系统异常] class={}, msg={}", e.getClass().getSimpleName(), e.getMessage(), e);
+        return Result.error(500, "系统异常: " + e.getMessage());
     }
 }

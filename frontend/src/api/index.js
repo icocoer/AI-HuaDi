@@ -217,7 +217,10 @@ export const homecareApi = {
   messageList(params) { return request.get('/homecare/message/list', { params }) },
   unreadMessageCount(receiverId) { return request.get('/homecare/message/unread-count', { params: { receiverId } }) },
   markMessageRead(id) { return request.put(`/homecare/message/${id}/read`) },
-  sendMessage(data) { return request.post('/homecare/message/send', data) }
+  sendMessage(data) { return request.post('/homecare/message/send', data) },
+
+  // AI健康分析
+  runAiAnalysis(elderId) { return request.post('/homecare/ai/analyze', null, { params: { elderId } }) }
 }
 
 export default request

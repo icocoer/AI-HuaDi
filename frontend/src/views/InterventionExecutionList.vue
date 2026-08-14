@@ -3,9 +3,6 @@
     <el-card shadow="never">
       <div class="page-header">
         <h3>干预执行记录</h3>
-        <el-button type="primary" @click="openAdd">
-          <el-icon><Plus /></el-icon>添加记录
-        </el-button>
       </div>
 
       <div class="search-bar">
@@ -17,9 +14,13 @@
 
       <el-table :data="tableData" border stripe v-loading="loading" style="margin-top: 15px">
         <el-table-column prop="id" label="ID" width="60" />
-        <el-table-column prop="planId" label="计划ID" width="80" />
-        <el-table-column prop="elderId" label="老人ID" width="80" />
-        <el-table-column prop="executionType" label="执行类型" width="110" />
+        <el-table-column prop="planId" label="计划ID" width="180" />
+        <el-table-column label="老人" width="100">
+          <template #default="{ row }">{{ getDisplayName(elderNameMap, row.elderId) }}</template>
+        </el-table-column>
+        <el-table-column label="执行类型" width="110">
+          <template #default="{ row }">{{ executionTypeLabel(row.executionType) }}</template>
+        </el-table-column>
         <el-table-column prop="content" label="执行内容" min-width="200" show-overflow-tooltip />
         <el-table-column prop="executionDate" label="执行日期" width="120" />
         <el-table-column prop="duration" label="时长(分钟)" width="100" />
@@ -97,11 +98,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { interventionExecutionApi, elderApi } from '../api'
+import { interventionExecutionApi, elderApi, systemApi } from '../api'
 import { exportToExcel } from '../utils/export'
+import { buildNameMap, getDisplayName } from '../utils/nameResolver'
 
 const tableData = ref([])
 const elderList = ref([])
+const elderNameMap = computed(() => buildNameMap(elderList.value))
+const executionTypes = ref({})
 const loading = ref(false)
 const submitting = ref(false)
 const dialogVisible = ref(false)
@@ -204,9 +208,25 @@ const loadElders = async () => {
   } catch { elderList.value = [] }
 }
 
+const loadExecutionTypes = async () => {
+  try {
+    const res = await systemApi.dictByType('execution_type')
+    const map = {}
+    if (res.data) {
+      res.data.forEach(item => { map[item.dictKey] = item.dictValue })
+    }
+    executionTypes.value = map
+  } catch { }
+}
+
+const executionTypeLabel = (val) => {
+  return executionTypes.value[val] || val
+}
+
 onMounted(() => {
   loadData()
   loadElders()
+  loadExecutionTypes()
 })
 </script>
 

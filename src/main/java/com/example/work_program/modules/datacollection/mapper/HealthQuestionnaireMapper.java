@@ -17,14 +17,14 @@ public interface HealthQuestionnaireMapper {
     List<HealthQuestionnaire> findByCollectionId(@Param("collectionId") Long collectionId);
 
     @Select("<script>SELECT * FROM health_questionnaire <where>" +
-            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
-            "<if test='questionnaireType != null and questionnaireType != \"\"'>AND questionnaire_type = #{questionnaireType}</if>" +
+            "<if test='elderId != null'> AND elder_id = #{elderId}</if>" +
+            "<if test='questionnaireType != null and questionnaireType != \"\"'> AND questionnaire_type = #{questionnaireType}</if>" +
             "</where> ORDER BY survey_time DESC LIMIT #{offset}, #{limit}</script>")
     List<HealthQuestionnaire> findAll(@Param("elderId") Long elderId, @Param("questionnaireType") String questionnaireType, @Param("offset") int offset, @Param("limit") int limit);
 
     @Select("<script>SELECT COUNT(*) FROM health_questionnaire <where>" +
-            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
-            "<if test='questionnaireType != null and questionnaireType != \"\"'>AND questionnaire_type = #{questionnaireType}</if>" +
+            "<if test='elderId != null'> AND elder_id = #{elderId}</if>" +
+            "<if test='questionnaireType != null and questionnaireType != \"\"'> AND questionnaire_type = #{questionnaireType}</if>" +
             "</where></script>")
     Long count(@Param("elderId") Long elderId, @Param("questionnaireType") String questionnaireType);
 

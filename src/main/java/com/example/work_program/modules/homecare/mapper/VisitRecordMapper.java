@@ -7,15 +7,15 @@ import java.util.List;
 @Mapper
 public interface VisitRecordMapper {
     @Select("<script>SELECT * FROM homecare_visit_record <where>" +
-            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
-            "<if test='planId != null'>AND plan_id = #{planId}</if>" +
+            "<if test='elderId != null'> AND elder_id = #{elderId}</if>" +
+            "<if test='planId != null'> AND plan_id = #{planId}</if>" +
             "</where> ORDER BY visit_date DESC LIMIT #{offset}, #{limit}</script>")
     List<VisitRecord> findAll(@Param("elderId") Long elderId, @Param("planId") Long planId,
                              @Param("offset") int offset, @Param("limit") int limit);
 
     @Select("<script>SELECT COUNT(*) FROM homecare_visit_record <where>" +
-            "<if test='elderId != null'>AND elder_id = #{elderId}</if>" +
-            "<if test='planId != null'>AND plan_id = #{planId}</if>" +
+            "<if test='elderId != null'> AND elder_id = #{elderId}</if>" +
+            "<if test='planId != null'> AND plan_id = #{planId}</if>" +
             "</where></script>")
     Long count(@Param("elderId") Long elderId, @Param("planId") Long planId);
 
